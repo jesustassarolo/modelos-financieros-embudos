@@ -253,11 +253,11 @@ class Builder:
         return ws
 
     def build_embudo(self):
-        """El embudo como tabla: cada paso con cantidad, % que pasa, % que se pierde, % acumulado, costo y techo por paso."""
-        ws = self.sheet("Embudo", [2, 46, 13, 13, 13, 13, 14, 14, 15, 50])
-        r = self.title(ws, 2, "Embudo: todos los pasos, cuántos, qué porcentaje pasa y cuánto cuesta cada uno",
-                       "Cada fila es un paso del embudo en orden. '% que pasa' compara con el paso anterior (o con el que dice la nota). El costo por paso es inversión ÷ cantidad; el techo por paso es lo máximo que podrías pagar por él si lo demás se mantiene. Los pasos sin costo propio ya se pagaron con el CPA: mejoran el AOV.")
-        r = self.header(ws, r, ["Paso", "Cantidad", "% que pasa", "% que se pierde", "% acumulado", "Costo por paso", "Techo por paso", "Ganancia por paso", "Qué se paga acá / cómo se lee"])
+        """El embudo como tabla: cada paso con cantidad, % que pasa, % acumulado, costo, ganancia y techo por paso."""
+        ws = self.sheet("Embudo", [2, 46, 13, 13, 13, 15, 15, 15, 50])
+        r = self.title(ws, 2, "Embudo: todos los pasos, cuántos pasan y, por cada uno, qué pagás, qué te queda y hasta cuánto podrías pagar",
+                       "Cada fila es un paso del embudo en orden. '% que pasa' compara con el paso anterior (o con el que dice la nota). Tres números por paso: lo que pagás hoy por cada uno (inversión ÷ cantidad), lo que te queda por cada uno (ganancia ÷ cantidad) y lo máximo que podrías pagar (el techo: lo que cada uno genera en cash neto). Techo = costo + ganancia + fijos repartidos.")
+        r = self.header(ws, r, ["Paso", "Cantidad", "% que pasa", "% acumulado", "Costo por paso (pagás hoy)", "Ganancia por paso (te queda)", "Techo por paso (máximo a pagar)", "Qué se paga acá / cómo se lee"])
         prev = None
         inv, uni, vpu, prof = self.ref["inversion"], self.ref["unidades"], self.ref["vpu"], self.ref["profit"]
         antes_unidad = True
@@ -271,42 +271,49 @@ class Builder:
             if vs:
                 vref = self.ref[vs]
                 self.put(ws, r, 4, f"=IF({vref}=0,0,{ref}/{vref})", "pct", "out")
-                self.put(ws, r, 5, f"=IF({vref}=0,0,1-{ref}/{vref})", "pct", "out")
             else:
-                self.put(ws, r, 4, "—"); self.put(ws, r, 5, "—")
+                self.put(ws, r, 4, "—")
             if antes_unidad:
-                self.put(ws, r, 6, "—")
+                self.put(ws, r, 5, "—")
             else:
-                self.put(ws, r, 6, f"=IF({uni}=0,0,{ref}/{uni})", "pct2", "out")
+                self.put(ws, r, 5, f"=IF({uni}=0,0,{ref}/{uni})", "pct2", "out")
             mult = st.get("mult", 1)
-            if st.get("costo", True):
-                self.put(ws, r, 7, f"=IF({ref}=0,0,{inv}*{mult}/{ref})", "money", "out", bold=True)
+            con_costo = st.get("costo", True)
+            if con_costo:
+                self.put(ws, r, 6, f"=IF({ref}=0,0,{inv}*{mult}/{ref})", "money", "out", bold=True)
             else:
-                self.put(ws, r, 7, "sin costo propio")
-            if st.get("techo", True):
-                self.put(ws, r, 8, f"=IF({ref}=0,0,{vpu}*{uni}*{mult}/{ref})", "money", "out")
+                self.put(ws, r, 6, "sin costo propio")
+            if con_costo or k == "ventas_front":
+                self.put(ws, r, 7, f"=IF({ref}=0,0,{prof}*{mult}/{ref})", "money", "out", bold=True)
+            else:
+                self.put(ws, r, 7, "—")
+            if st.get("techo", True) and con_costo:
+                self.put(ws, r, 8, f"=IF({ref}=0,0,{vpu}*{uni}*{mult}/{ref})", "money", "out", bold=True)
             else:
                 self.put(ws, r, 8, "—")
-            if st.get("costo", True) or k == "ventas_front":
-                self.put(ws, r, 9, f"=IF({ref}=0,0,{prof}*{mult}/{ref})", "money", "out", bold=True)
-            else:
-                self.put(ws, r, 9, "—")
-            self.put(ws, r, 10, st.get("nota", ""), wrap=True)
+            self.put(ws, r, 9, st.get("nota", ""), wrap=True)
+            if k == "unidades":
+                fila_unidad = r
             prev = k
             r += 1
         r += 1
+        self.put(ws, r, 2, "Comprobalo con la fila de la unidad: costo + ganancia + fijos repartidos = techo", bold=True)
+        self.put(ws, r, 6, f"=F{fila_unidad}", "money", "out")
+        self.put(ws, r, 7, f"=G{fila_unidad}", "money", "out")
+        self.put(ws, r, 8, f"=F{fila_unidad}+G{fila_unidad}+{self.ref['fijos']}/{uni}", "money", "out", bold=True)
+        self.put(ws, r, 9, "Techo = costo + ganancia + fijos ÷ unidades. Lo que falta entre (costo + ganancia) y el techo son los costos fijos repartidos entre las unidades.", wrap=True)
+        r += 1
         self.put(ws, r, 2, "Cómo se lee", bold=True)
         for linea in ["Cantidad: cuántas acciones o personas hubo en ese paso con los supuestos del escenario en uso.",
-                      "% que pasa: de los que estaban en el paso anterior (o en el paso que indica la nota), cuántos llegan a este. % que se pierde es el complemento.",
-                      "% acumulado: cuántos llegan a este paso por cada 100 unidades que compra la pauta.",
+                      "% que pasa: de los que estaban en el paso anterior (o en el paso que indica la nota), cuántos llegan a este. % acumulado: cuántos llegan a este paso por cada 100 unidades que compra la pauta.",
                       "Costo por paso: inversión ÷ cantidad. Es lo que te está costando hoy cada persona que llega a ese paso.",
-                      "Techo por paso: lo máximo que podrías pagar por ese paso sin perder plata, si lo demás se mantiene. Comparalo con el costo por paso: si el costo está por encima del techo, ese paso está caro.",
-                      "Ganancia por paso: la ganancia del período dividida por la cantidad de ese paso. Es la otra cara del costo: cuánto te queda por cada visita, por cada lead, por cada comprador. La ganancia por visita es la métrica más valiosa del embudo: resume todo lo que pasa después.",
+                      "Ganancia por paso: ganancia del período ÷ cantidad. Lo que te queda por cada persona de ese paso después de pagar la pauta, las comisiones, los reembolsos y los fijos. La ganancia por visita es la métrica más valiosa del embudo: resume todo lo que pasa después.",
+                      "Techo por paso: lo que cada persona de ese paso genera en cash neto (cash neto menos costos por unidad, dividido por la cantidad). Es lo máximo que podrías pagar por ese paso antes de que la ganancia llegue a cero, si lo demás se mantiene. Por eso siempre es mayor que la ganancia: techo = costo + ganancia + fijos repartidos.",
                       "Los bumps, las OTOs y la ascensión no tienen costo propio: se pagan con el CPA del comprador principal y se miden por lo que suman al AOV."]:
             r += 1
             self.put(ws, r, 2, linea, wrap=True)
-            ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=10)
-            ws.row_dimensions[r].height = 26
+            ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=9)
+            ws.row_dimensions[r].height = 28
         ws.freeze_panes = "C5"
         return ws
 
@@ -574,7 +581,7 @@ class Builder:
         r = self.title(ws, 2, "Chequeos: el modelo se revisa solo", "Si alguna fila dice REVISAR, hay un supuesto fuera de rango o un dato inconsistente.")
         r = self.header(ws, r, ["Chequeo", "Estado", "Qué revisar"])
         first = r
-        for hoja, rng in [("Modelo", "C5:C160"), ("Embudo", "C5:I60"), ("Resumen", "C5:C60"), ("Proyección 12 meses", "C5:O40"), ("Escenarios", "C5:L120"), ("Seguimiento", "C5:Q80")]:
+        for hoja, rng in [("Modelo", "C5:C160"), ("Embudo", "C5:H60"), ("Resumen", "C5:C60"), ("Proyección 12 meses", "C5:O40"), ("Escenarios", "C5:L120"), ("Seguimiento", "C5:Q80")]:
             self.put(ws, r, 2, f"Ninguna celda con error en {hoja}")
             self.put(ws, r, 3, f"=IF(ISERROR(SUM('{hoja}'!{rng})),\"REVISAR\",\"OK\")", None, "out")
             self.put(ws, r, 4, "Si dice REVISAR, hay un #DIV/0! o #REF!: casi siempre un supuesto en 0 o una fila borrada.", wrap=True)

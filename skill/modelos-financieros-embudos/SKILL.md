@@ -9,7 +9,7 @@ description: Calculadora y guía de modelos financieros para embudos de venta on
 
 ## Qué hace
 
-Convierte el embudo del usuario en una cadena de números (cantidad, porcentaje que pasa, costo por paso, techo por paso, ganancia por paso) y responde las preguntas que importan cuando se invierte en publicidad: cuánto vale cada lead, hasta cuánto pagarlo, cuánto invertir, cuándo frenar y qué palanca mover. Cubre cuatro embudos; la matemática es la misma en los cuatro (ver `reference/formulas.md`):
+Convierte el embudo del usuario en una cadena de números (cantidad, porcentaje que pasa, costo por paso, ganancia por paso, techo por paso) y responde las preguntas que importan cuando se invierte en publicidad: cuánto vale cada lead, hasta cuánto pagarlo, cuánto invertir, cuándo frenar y qué palanca mover. Cubre cuatro embudos; la matemática es la misma en los cuatro (ver `reference/formulas.md`):
 
 | Embudo | Unidad que compra la pauta | Cadena |
 |---|---|---|
@@ -51,7 +51,7 @@ El gráfico tiene tres partes: el embudo (una barra por paso con su cantidad, y 
 
 - Con ejecución de código: `python3 scripts/calculadora.py --embudo <embudo> --set ... --html grafico.html` genera el HTML con el SVG listo y la marca de agua. Entregalo como archivo o pegá su contenido en un artefacto HTML.
 - Sin ejecución de código pero con artefactos (claude.ai): creá un artefacto HTML con un SVG que siga la misma estructura (barras horizontales proporcionales a la cantidad de cada paso; punto de color por el semáforo de ese paso; barras de sensibilidad) y la línea de autor al pie.
-- Sin ninguna de las dos: una tabla en texto con las mismas columnas (paso, cantidad, % que pasa, costo hoy, techo, ganancia por paso).
+- Sin ninguna de las dos: una tabla en texto con las mismas columnas (paso, cantidad, % que pasa, costo hoy, ganancia por paso, techo).
 
 ## Modo 4 · Explicar un concepto
 

@@ -18,7 +18,7 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 1. Abrí el del embudo que usás. La hoja **Inicio** es el instructivo.
 2. En **Supuestos** reemplazá el ejemplo por tus números (amarillo = se edita, azul = se calcula). Si no tenés datos, escenario 1 (conservador) y la hoja **Benchmarks**.
 3. **Resumen**: ganancia, ROAS sobre cash neto, techo y objetivo de tu unidad, semáforo, y las dos caras de cada número (costo y ganancia por visita, por lead, por cliente; order value bruto y neto).
-4. **Embudo**: todos los pasos en orden con cantidad, % que pasa, % que se pierde, costo por paso, techo por paso y ganancia por paso.
+4. **Embudo**: todos los pasos en orden con cantidad, % que pasa, % acumulado, lo que pagás hoy por cada uno (costo), lo que te queda por cada uno (ganancia) y lo máximo que podrías pagar (techo), con la fila de comprobación costo + ganancia + fijos repartidos = techo.
 5. **Escenarios**, **Sensibilidad**, **Proyección 12 meses** y **Seguimiento** (una columna por semana con tus datos reales y semáforo).
 
 ## Cómo usar la skill

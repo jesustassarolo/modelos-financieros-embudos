@@ -205,7 +205,7 @@ WEBINAR_GRATUITO = {
                  {"key": "solicitudes", "nombre": "solicitud"},
                  {"key": "ventas_front", "nombre": "cliente", "bold": True, "como": "Ganancia del período ÷ compradores. Su par es el CPA."}],
     "embudo": [
-        {"key": "impresiones", "label": "Impresiones del anuncio", "mult": 1000, "techo": False, "nota": "Costo por mil impresiones (CPM). Palancas: público, frecuencia, horario."},
+        {"key": "impresiones", "label": "Impresiones del anuncio (por mil)", "mult": 1000, "nota": "Costo por mil impresiones (CPM) y CPM máximo. Palancas: público, frecuencia, horario."},
         {"key": "clics", "label": "Clics al enlace", "nota": "Costo por clic. Palanca: el creativo (CTR)."},
         {"key": "visitas", "label": "Visitas a la landing", "nota": "Costo por visita. Palanca: velocidad de carga, enlace correcto."},
         {"key": "unidades", "label": "Registros (leads)", "bold": True, "nota": "CPL real. Palanca: promesa y formulario del landing."},

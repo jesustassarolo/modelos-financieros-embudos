@@ -114,9 +114,9 @@ def reporte(e, s):
          f"Tu {un} vale (cash neto):            {money(m['vpu'])}",
          f"Hasta cuánto podés pagar (techo):    {money(m['techo'])}   <- acá no ganás ni perdés",
          f"Cuánto te conviene pagar (objetivo): {money(m['objetivo'])}   <- con {s['margen_seg']:.0%} de colchón",
-         "Techos por etapa (lo máximo que podrías pagar por cada paso):"]
+         "Por cada paso: lo que pagás hoy, lo que te queda y lo máximo que podrías pagar (techo = costo + ganancia + fijos repartidos):"]
     for n, q, c, t, g in m["etapas"]:
-        L.append(f"   {n:<24} cantidad {entero(q):>9}   costo hoy {money(c):>10}   techo {money(t):>10}   ganancia por paso {money(g):>10}")
+        L.append(f"   {n:<24} cantidad {entero(q):>9}   pagás hoy {money(c):>10}   te queda {money(g):>10}   techo {money(t):>10}")
     L += [f"Con tu costo actual de {money(m['cpu'])} por {un}: SEMÁFORO {m['semaforo']}  (ROAS sobre cash neto {m['roas']:.2f}x; objetivo {s['roas_obj']:.1f}x; el primer mes entra {m['roas_m1']:.2f}x)",
           f"Ganancia del período: {money(m['profit'])}   |   ganancia por {un}: {money(m['gan_unidad'])}   |   CPA {money(m['cpa'])}   |   AOV {money(m['aov'])} (neto {money(m['aov_neto'])})"]
     if m["inv_meta"] is None:

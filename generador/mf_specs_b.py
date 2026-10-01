@@ -14,7 +14,7 @@ LLAMADA = {
                  {"key": "llamadas", "nombre": "llamada"},
                  {"key": "ventas_front", "nombre": "cliente", "bold": True, "como": "Ganancia del período ÷ compradores. Su par es el CAC."}],
     "embudo": [
-        {"key": "impresiones", "label": "Impresiones del anuncio", "mult": 1000, "techo": False, "nota": "Costo por mil impresiones (CPM)."},
+        {"key": "impresiones", "label": "Impresiones del anuncio (por mil)", "mult": 1000, "nota": "Costo por mil impresiones (CPM) y CPM máximo."},
         {"key": "clics", "label": "Clics al enlace", "nota": "Costo por clic (CTR)."},
         {"key": "visitas", "label": "Visitas a la página", "nota": "Costo por visita."},
         {"key": "unidades", "label": "Leads", "bold": True, "nota": "CPL real."},
