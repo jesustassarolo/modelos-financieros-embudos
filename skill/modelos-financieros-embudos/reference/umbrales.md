@@ -13,13 +13,13 @@ Regla de Jesús Tassarolo: **lo que se evalúa son umbrales, no costos.** El cos
 | Lanzamiento o webinar en vivo (webinar gratuito, webinar pago) | 1,7 | 2,0 | 1,3 |
 | Excepción: low-ticket evergreen con mucha inversión (30.000 o más por mes) y escalera sólida (2 bumps + OTOs + ascensión) | 1,5 | 1,7 | puede operar más abajo mientras la ganancia siga positiva |
 
-Semáforo del macro: verde si gana y el ROAS está en el piso de escala o más; amarillo si gana pero el ROAS está entre el piso absoluto y el de escala (no se escala: se sostiene y se mejora); rojo si pierde o el ROAS está debajo del piso absoluto.
+Semáforo del macro: verde si gana y el ROAS está por encima del piso de escala; amarillo si gana pero el ROAS está en el piso de escala o entre el piso absoluto y el de escala (se frena: se sostiene y se mejora, no se escala); rojo si pierde o el ROAS está debajo del piso absoluto. "Mucha inversión" se mide por mes (la inversión del período multiplicada por los períodos por mes) y la escalera sólida se verifica en los supuestos (2 bumps y alguna OTO o ascensión con conversión), no por una bandera.
 
 El ROAS que decide es sobre **cash neto** (cobrado, menos comisiones y reembolsos), nunca sobre facturado. En low-ticket, el ROAS del front es el ROAS del embudo: si el front pierde, se pule la oferta del front antes de tocar tráfico. Caso real: un cliente perdía plata en el front de su low-ticket; no se tocó el tráfico, se pulió la oferta del front (promesa, precio, bumps) y el front pasó a ROAS positivo.
 
 ## 2. Fugas: los porcentajes entre pasos contra percentiles
 
-Cada paso tiene una conversión. Debajo de **p25** es una **fuga**; entre p25 y la **mediana**, mejorable; mediana o más, ok; **p75** o más, fortaleza. La **fuga principal** es la que está más lejos de la mediana (y, a igual brecha, la que está más arriba en el embudo, porque multiplica todo lo que viene después). Cerrar una fuga es ganar más sin pagar más: por eso se mira antes que los costos.
+Cada paso tiene una conversión. Debajo de **p25** es una **fuga**; entre p25 y la **mediana**, mejorable; mediana o más, ok; **p75** o más, fortaleza. La **fuga principal** es la que está más lejos de la mediana; una fuga (bajo p25) tiene prioridad sobre una mejorable aunque su brecha sea menor, y a igual brecha gana la que está más arriba en el embudo, porque multiplica todo lo que viene después. Los pasos que el embudo no tiene (un bump 2 sin precio, un programa superior inexistente) dicen "no aplica" y no cuentan como fuga. Las lecturas compuestas (visita → compra como producto de sus dos pasos) se muestran pero no eligen la fuga principal: la acción tiene que ser específica. Cerrar una fuga es ganar más sin pagar más: por eso se mira antes que los costos.
 
 Los percentiles de esta tabla son puntos de partida para tráfico frío en español (nuestra experiencia operando embudos hispanos, con la referencia externa que existe en la sección 4). En cuanto el usuario tiene 4 semanas, su propio promedio se suma como segunda vara: una conversión puede estar en la mediana de la industria y 30 % por debajo de su propio promedio, y eso también es una fuga.
 
@@ -29,7 +29,8 @@ Los percentiles de esta tabla son puntos de partida para tráfico frío en espa�
 |---|---|---|---|---|
 | Visita → checkout | 2 % | 3 % | 5 % | La VSL y la oferta del front: gancho, promesa, congruencia con el anuncio, el botón |
 | Checkout → compra | 15 % | 22 % | 30 % | El checkout: fricción, formas de pago, cuotas, garantía, velocidad |
-| Visita → compra | 0,5 % | 0,9 % | 1,5 % | El front completo (VSL + checkout): la fuga que más plata cuesta en un low-ticket |
+| Visita → compra (lectura: producto de los dos pasos) | 0,3 % | 0,66 % | 1,5 % | Es lectura, no elige la fuga principal: la acción va a la VSL o al checkout |
+| ROAS del front sobre cash neto (principal + bumps ÷ pauta) | 0,7 | 1,0 | 1,3 | La oferta del front: promesa, precio y bumps. Si el front pierde, se pule antes de tocar tráfico |
 | Bump 1 tomado | 15 % | 25 % | 35 % | Complemento obvio del principal, precio bajo, una casilla, copy de dos líneas |
 | Bump 2 tomado | 10 % | 18 % | 25 % | Que no compita con el bump 1 |
 | OTO 1 tomada | 5 % | 9 % | 14 % | La consecuencia lógica de lo que acaba de comprar; precio y video corto |
@@ -61,13 +62,14 @@ Los percentiles de esta tabla son puntos de partida para tráfico frío en espa�
 | Calificado → agenda | 40 % | 55 % | 70 % | Velocidad de respuesta, huecos en el calendario, confirmación por WhatsApp |
 | Agenda → llamada (show) | 55 % | 65 % | 75 % | Nutrición antes de la llamada, recordatorios, confirmación: 700 agendas y 100 llamadas no es el closer, es nutrición |
 | Llamada → venta (cierre) | 15 % | 25 % | 35 % | Guion, objeciones, cuotas, calidad del lead; se juzga con 3 o 4 eventos |
+| Downsell tomado | 5 % | 10 % | 15 % | El downsell: versión en cuotas o más chica del programa |
 
 ### Webinar pago (evento con entrada)
 
 | Paso | p25 | Mediana | p75 | Qué tocar si es fuga |
 |---|---|---|---|---|
 | Visita → entrada | 1 % | 2 % | 3,5 % | La página de ventas de la entrada: promesa, precio escalonado, prueba |
-| ROAS del front (entrada + bump ÷ pauta) | 0,5 | 0,8 | 1,2 | La página de la entrada y el bump: cerca de 1, el evento se paga solo |
+| ROAS del front sobre cash neto (entrada + bump ÷ pauta) | 0,5 | 0,8 | 1,2 | La página de la entrada y el bump: cerca de 1, el evento se paga solo |
 | Bump de la entrada tomado | 15 % | 20 % | 30 % | El bump de la entrada |
 | Entrada → grupo | 60 % | 80 % | 90 % | Botón directo al grupo después de pagar |
 | Entrada → en vivo | 35 % | 50 % | 65 % | Recordatorios, grupo, horario: ya pagaron, tienen que venir |
