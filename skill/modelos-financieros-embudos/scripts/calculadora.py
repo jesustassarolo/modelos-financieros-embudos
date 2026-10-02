@@ -213,7 +213,7 @@ def html(e, s, m, sens, path):
     W = 900; pasos = m["etapas"]; mx = max(q for _, q, *_ in pasos) or 1
     rows = ""; y = 40
     for n, q, c, t, g in pasos:
-        w = max(4, 520 * q / mx); col = "#DC2626" if c > t else ("#00996A" if c <= t / (1 + s["margen_seg"]) else "#F59E0B")
+        w = max(4, 400 * q / mx); col = "#DC2626" if c > t else ("#00996A" if c <= t / (1 + s["margen_seg"]) else "#F59E0B")
         rows += f'<text x="10" y="{y+15}" font-size="12">{n}</text><rect x="200" y="{y}" width="{w}" height="22" fill="#E8F8F1" stroke="#00996A"/>'
         rows += f'<text x="{205+w}" y="{y+15}" font-size="11" fill="#3D3D40">{entero(q)} · costo {money(c)} · techo {money(t)} · gana {money(g)}</text><circle cx="190" cy="{y+11}" r="5" fill="{col}"/>'
         y += 30
