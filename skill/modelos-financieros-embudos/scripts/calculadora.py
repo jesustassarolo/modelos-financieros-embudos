@@ -26,18 +26,18 @@ SUPUESTOS = {
  "low_ticket": dict(inversion=9000, costo_visita=0.30, conv_checkout=0.035, conv_venta=0.26, precio_front=37,
     bump1_precio=17, bump1_conv=0.25, bump2_precio=17, bump2_conv=0.18, oto1_precio=47, oto1_conv=0.10, oto2_precio=17, oto2_conv=0.06,
     oto3_precio=97, oto3_conv=0.03, oto4_precio=27, oto4_conv=0.04, ascension_precio=297, ascension_conv=0.02,
-    pasarela=0.10, closers=0.0, reembolsos=0.05, costo_semivar=0.0, fijos=1500, cobro_m1=1.0, roas_obj=2.0, margen_seg=0.30, meta_ventas=500),
+    pasarela=0.10, closers=0.0, reembolsos=0.05, costo_semivar=0.0, fijos=1500, cobro_m1=1.0, roas_obj=2.0, margen_seg=0.30, meta_ventas=500, modo="evergreen", escalera_solida=1),
  "webinar_gratuito": dict(inversion=6000, cpm=4.5, ctr=0.022, clic_visita=0.90, conv_landing=0.23, calif_pct=0.60, grupo_pct=0.67,
     show_vivo=0.15, show_replay=0.55, solic_vivo_pct=0.10, solic_replay_pct=0.025, cierre_pct=0.40, precio_oferta=297,
     bump_precio=47, bump_conv=0.20, backend_precio=997, backend_conv=0.05, pasarela=0.10, closers=0.0, reembolsos=0.05,
-    costo_semivar=0.10, fijos=1200, cobro_m1=0.70, roas_obj=2.0, margen_seg=0.30, meta_ventas=60),
+    costo_semivar=0.10, fijos=1200, cobro_m1=0.70, roas_obj=2.0, margen_seg=0.30, meta_ventas=60, modo="lanzamiento", escalera_solida=0),
  "llamada": dict(inversion=4500, cpm=10.0, ctr=0.015, clic_visita=0.85, conv_landing=0.28, hay_evento=0, show_evento=0.14,
     aplic_pct=0.10, calif_pct=0.60, agenda_pct=0.60, show_llamada=0.70, cierre=0.25, ticket=1500, ds_precio=497, ds_conv=0.10,
-    pasarela=0.05, closers=0.10, reembolsos=0.05, costo_semivar=0.20, fijos=2500, cobro_m1=0.60, roas_obj=2.5, margen_seg=0.30, meta_ventas=15),
+    pasarela=0.05, closers=0.10, reembolsos=0.05, costo_semivar=0.20, fijos=2500, cobro_m1=0.60, roas_obj=2.5, margen_seg=0.30, meta_ventas=15, modo="evergreen", escalera_solida=0),
  "webinar_pago": dict(inversion=3000, costo_visita=0.35, conv_entrada=0.025, precio_entrada=9, bump_e_precio=27, bump_e_conv=0.20,
     grupo_pct=0.85, show_vivo=0.55, show_replay=0.25, solic_vivo_pct=0.16, solic_replay_pct=0.04, cierre_pct=0.50, precio_oferta=497,
     backend_precio=1997, backend_conv=0.10, pasarela=0.08, closers=0.0, reembolsos=0.05, costo_semivar=0.30, fijos=800, cobro_m1=0.50,
-    roas_obj=2.0, margen_seg=0.30, meta_ventas=25),
+    roas_obj=2.0, margen_seg=0.30, meta_ventas=25, modo="lanzamiento", escalera_solida=0),
 }
 UNIDAD = {"low_ticket": "visita", "webinar_gratuito": "registro", "llamada": "lead", "webinar_pago": "entrada"}
 PALANCAS = {
@@ -114,31 +114,99 @@ def sensibilidad(e, s):
 
 # ------------------------------------------------------------ lo que más importa (radiografía): umbrales 'mayor es mejor'
 # (rojo si < t1, amarillo si < t2, verde si >= t2); los mismos de reference/benchmarks.md
-LANDING = {"low_ticket": ("conv_checkout", "visita → checkout", 0.02, 0.03), "webinar_gratuito": ("conv_landing", "visita → registro", 0.15, 0.22),
-           "llamada": ("conv_landing", "visita → lead", 0.15, 0.22), "webinar_pago": ("conv_entrada", "visita → entrada", 0.01, 0.02)}
-CADENA_BENCH = {
- "low_ticket": [("conv_venta", "checkout → compra", 0.15, 0.22), ("bump1_conv", "bump 1 tomado", 0.15, 0.25), ("oto1_conv", "OTO 1 tomada", 0.05, 0.09)],
- "webinar_gratuito": [("grupo_pct", "registro → grupo", 0.50, 0.65), ("show_vivo", "registro → en vivo", 0.10, 0.15), ("solic_vivo_pct", "en vivo → solicitud", 0.05, 0.10), ("cierre_pct", "solicitud → compra", 0.25, 0.40)],
- "llamada": [("aplic_pct", "lead → aplicación", 0.05, 0.10), ("agenda_pct", "calificado → agenda", 0.40, 0.55), ("show_llamada", "agenda → llamada", 0.55, 0.65), ("cierre", "llamada → venta", 0.15, 0.25)],
- "webinar_pago": [("show_vivo", "entrada → en vivo", 0.35, 0.50), ("solic_vivo_pct", "en vivo → solicitud", 0.08, 0.14), ("cierre_pct", "solicitud → compra", 0.25, 0.40)],
-}
-ACCION = {
- 1: "El problema está después de la página (si el costo por visita está en verde): landing, show, oferta, cierre y cobranza, en ese orden. No toques el presupuesto.",
- 2: "Tráfico caro: CPM → CTR → clic a visita → conversión de la landing, en ese orden. Anuncios nuevos hoy. Nunca bajar presupuesto para 'arreglar' el CPL.",
- 3: "La palanca más barata: la misma promesa que el anuncio, formulario más corto, velocidad, un solo llamado a la acción. Una tarde de trabajo; medir 7 días.",
- 4: "Alimentá el embudo: 20 a 50 piezas nuevas por semana escalando (10 a 20 sin escalar), 10 a 15 % del presupuesto en testeo, 2 USD por día por anuncio en Latinoamérica, apagar a las 12 h lo que no tiene clics.",
- 5: "El tráfico no es el problema: pausá la escalada y revisá oferta, pitch y cierre. Si venís de subir un escalón, volvé al anterior.",
- 6: "Arreglá el eslabón más bajo: asistencia (recordatorios, grupo, horario, nutrición), solicitudes (congruencia, claridad, pitch), cierre (seguimiento en minutos, guion, cuotas).",
- 7: "Cobranza y forma de pago, no tráfico. Reembolsos altos son oferta o expectativa; caja corta es la caja necesaria de la proyección, tenela antes de escalar.",
-}
-PEOR = {"ROJO": 0, "AMARILLO": 1, "VERDE": 2, "SIN DATOS": 3}
+# ------------------------------------------------------------ LA INTELIGENCIA DE LOS UMBRALES
+# Lo que se evalúa son porcentajes y ROAS, no costos: el costo por lead depende del mercado y del nicho (se lee contra el
+# CPM y contra el promedio propio); los porcentajes de conversión entre pasos sí se comparan con percentiles de la industria
+# para detectar fugas; y antes que nada, el macro: si gana plata y si el ROAS está sobre el piso de su tipo de embudo.
 
-DIRECCION = {"cpu": "menor", "cpm": "menor", "costo_visita": "menor", "frecuencia": "menor", "reembolsos": "menor"}  # el resto: mayor es mejor
+# 1) MACRO · pisos de ROAS sobre cash neto (regla de Jesús Tassarolo): se escala hasta que el ROAS cae al piso de escala
+#    (evergreen 1,5 · lanzamiento / webinar 1,7 con objetivo 2,0); nunca por debajo de 1,3, salvo low-ticket evergreen con
+#    mucha inversión y escalera sólida (2 bumps + OTOs), que puede operar más abajo mientras la ganancia sea positiva.
+PISOS = {"evergreen": {"escala": 1.5, "objetivo": 1.7, "absoluto": 1.3}, "lanzamiento": {"escala": 1.7, "objetivo": 2.0, "absoluto": 1.3}}
+MODO_DEFAULT = {"low_ticket": "evergreen", "webinar_gratuito": "lanzamiento", "llamada": "evergreen", "webinar_pago": "lanzamiento"}
+
+def pisos(e, s):
+    modo = str(s.get("modo") or MODO_DEFAULT[e]).lower().strip()
+    p = dict(PISOS.get(modo, PISOS["evergreen"])); p["modo"] = modo; p["nota"] = ""
+    if e == "low_ticket" and modo == "evergreen" and float(s.get("escalera_solida", 0) or 0) >= 1 and s["inversion"] >= 30000:
+        p["absoluto"] = 1.0; p["nota"] = "excepción: low-ticket evergreen con mucha inversión y escalera sólida; se tolera hasta 1,0 mientras la ganancia siga positiva"
+    return p
+
+# 2) FUGAS · percentiles de conversión por paso (tráfico frío hispano; punto de partida de la industria, no de un nicho)
+#    Debajo de p25 = FUGA · entre p25 y mediana = MEJORABLE · mediana o más = OK · p75 o más = FORTALEZA.
+PERCENTILES = {
+ "low_ticket": [
+  dict(k="conv_checkout", label="visita → checkout", p=(0.02, 0.03, 0.05), tocar="la VSL y la oferta del front: gancho, promesa, congruencia con el anuncio, el botón; si perdés en el front, se pule la oferta antes de tocar tráfico"),
+  dict(k="conv_venta", label="checkout → compra", p=(0.15, 0.22, 0.30), tocar="el checkout: fricción, formas de pago, cuotas, garantía, velocidad"),
+  dict(calc=lambda s, m: s["conv_checkout"] * s["conv_venta"], label="visita → compra", p=(0.005, 0.009, 0.015), tocar="el front completo (VSL + checkout): es la fuga que más plata cuesta en un low-ticket"),
+  dict(k="bump1_conv", label="bump 1 tomado", p=(0.15, 0.25, 0.35), tocar="el bump: complemento obvio del principal, precio bajo, una casilla, copy de dos líneas"),
+  dict(k="bump2_conv", label="bump 2 tomado", p=(0.10, 0.18, 0.25), tocar="el bump 2: que no compita con el bump 1"),
+  dict(k="oto1_conv", label="OTO 1 tomada", p=(0.05, 0.09, 0.14), tocar="la OTO 1: la siguiente consecuencia lógica de lo que acaba de comprar, precio y video corto"),
+  dict(k="oto2_conv", label="OTO 2 tomada", p=(0.03, 0.06, 0.09), tocar="la OTO 2 (downsell): versión más barata o en cuotas de la OTO 1"),
+  dict(k="ascension_conv", label="ascensión al programa", p=(0.01, 0.02, 0.04), tocar="el camino al programa: llamada, aplicación o secuencia después de la compra"),
+  dict(calc=lambda s, m: d(m["aov"], s["precio_front"]), label="AOV ÷ precio del principal", p=(1.2, 1.4, 1.7), tocar="la escalera entera: sin bumps y OTOs que sumen, el low-ticket no se paga"),
+ ],
+ "webinar_gratuito": [
+  dict(k="conv_landing", label="visita → registro", p=(0.15, 0.22, 0.30), tocar="la landing: promesa igual a la del anuncio, formulario corto, velocidad, un solo llamado a la acción"),
+  dict(k="grupo_pct", label="registro → grupo", p=(0.50, 0.65, 0.80), tocar="botón directo al grupo, incentivo concreto por entrar, bienvenida con fecha y hora"),
+  dict(k="show_vivo", label="registro → en vivo", p=(0.10, 0.15, 0.22), tocar="recordatorios 24 h / 2 h / 30 min, ventana corta entre registro y evento, calentar el grupo, la expectativa que creó el anuncio"),
+  dict(k="show_replay", label="registro → replay", p=(0.40, 0.60, 0.80), tocar="replay el mismo día por WhatsApp y mail, ventana de 72 h"),
+  dict(k="solic_vivo_pct", label="en vivo → solicitud", p=(0.05, 0.10, 0.15), tocar="congruencia entre el contenido y la oferta, claridad de la oferta, pitch, momento en que abrís el formulario (sin tocar el precio)"),
+  dict(k="solic_replay_pct", label="replay → solicitud", p=(0.01, 0.02, 0.04), tocar="el seguimiento del replay: recordatorios de cierre, escasez real"),
+  dict(k="cierre_pct", label="solicitud → compra", p=(0.25, 0.40, 0.55), tocar="seguimiento en minutos, closer, cuotas, nutrición previa"),
+  dict(k="bump_conv", label="bump tomado", p=(0.15, 0.25, 0.35), tocar="el bump del checkout"),
+  dict(k="backend_conv", label="pasan al programa", p=(0.03, 0.05, 0.08), tocar="el camino al programa superior"),
+ ],
+ "llamada": [
+  dict(k="conv_landing", label="visita → lead", p=(0.15, 0.22, 0.30), tocar="la página: promesa igual a la del anuncio, formulario corto"),
+  dict(k="aplic_pct", label="lead → aplicación", p=(0.05, 0.10, 0.18), tocar="el video o la página de aplicación: por qué aplicar y qué gana; primeras preguntas fáciles"),
+  dict(k="calif_pct", label="aplicación → calificado", p=(0.40, 0.55, 0.70), tocar="la pregunta que califica y el público del anuncio"),
+  dict(k="agenda_pct", label="calificado → agenda", p=(0.40, 0.55, 0.70), tocar="velocidad de respuesta, huecos en el calendario, confirmación por WhatsApp"),
+  dict(k="show_llamada", label="agenda → llamada (show)", p=(0.55, 0.65, 0.75), tocar="nutrición antes de la llamada, recordatorios, confirmación; 700 agendas y 100 llamadas no es el closer, es nutrición"),
+  dict(k="cierre", label="llamada → venta (cierre)", p=(0.15, 0.25, 0.35), tocar="guion, objeciones, cuotas, calidad del lead; se juzga con 3 o 4 eventos"),
+ ],
+ "webinar_pago": [
+  dict(k="conv_entrada", label="visita → entrada", p=(0.01, 0.02, 0.035), tocar="la página de ventas de la entrada: promesa, precio escalonado, prueba"),
+  dict(calc=lambda s, m: d(s["precio_entrada"] + s["bump_e_conv"] * s["bump_e_precio"], s["costo_visita"] / s["conv_entrada"]) if s["conv_entrada"] else 0.0, label="ROAS del front (entrada + bump ÷ pauta)", p=(0.5, 0.8, 1.2), tocar="la página de la entrada y el bump: cerca de 1 el evento se paga solo"),
+  dict(k="bump_e_conv", label="bump de la entrada tomado", p=(0.15, 0.20, 0.30), tocar="el bump de la entrada"),
+  dict(k="grupo_pct", label="entrada → grupo", p=(0.60, 0.80, 0.90), tocar="botón directo al grupo después de pagar"),
+  dict(k="show_vivo", label="entrada → en vivo", p=(0.35, 0.50, 0.65), tocar="recordatorios, grupo, horario: ya pagaron, tienen que venir"),
+  dict(k="solic_vivo_pct", label="en vivo → solicitud", p=(0.08, 0.14, 0.22), tocar="congruencia contenido-oferta, claridad, pitch"),
+  dict(k="cierre_pct", label="solicitud → compra", p=(0.25, 0.40, 0.55), tocar="seguimiento en minutos, closer, cuotas"),
+  dict(k="backend_conv", label="pasan al programa", p=(0.05, 0.10, 0.15), tocar="el camino al programa superior"),
+ ],
+}
+
+def fugas(e, s, m):
+    """Cada porcentaje entre pasos contra sus percentiles. Devuelve (filas, principal, semáforo)."""
+    filas = []
+    for i, it in enumerate(PERCENTILES[e]):
+        v = it["calc"](s, m) if "calc" in it else float(s.get(it["k"], 0) or 0)
+        p25, p50, p75 = it["p"]
+        estado = "FUGA" if v < p25 else ("MEJORABLE" if v < p50 else ("FORTALEZA" if v >= p75 else "OK"))
+        brecha = d(p50 - v, p50) if v < p50 else 0.0
+        filas.append(dict(label=it["label"], valor=v, p=it["p"], estado=estado, brecha=brecha, tocar=it["tocar"], orden=i, es_ratio=it["label"].startswith("AOV") or it["label"].startswith("ROAS")))
+    candidatas = [f for f in filas if f["estado"] in ("FUGA", "MEJORABLE")]
+    principal = max(candidatas, key=lambda f: (f["estado"] == "FUGA", f["brecha"], -f["orden"])) if candidatas else None
+    sem = "ROJO" if any(f["estado"] == "FUGA" for f in filas) else ("AMARILLO" if candidatas else "VERDE")
+    return filas, principal, sem
+
+def fmt_fuga(f):
+    fx = (lambda x: ratio(x)) if f["es_ratio"] else pct
+    return f"{f['label']} {fx(f['valor'])} [{f['estado'].lower()}; p25 {fx(f['p'][0])} · mediana {fx(f['p'][1])} · p75 {fx(f['p'][2])}]"
+
+ACCION = {
+ 2: "El problema está después de la página (si el costo por visita está en verde): revisá la fuga principal; no toques el presupuesto.",
+ 3: "Tráfico caro para tu nicho o contra tu promedio: CPM → CTR → clic a visita → conversión de la landing, en ese orden. Anuncios nuevos hoy. Nunca bajar presupuesto para 'arreglar' el CPL.",
+ 4: "Alimentá el embudo: 20 a 50 piezas nuevas por semana escalando (10 a 20 sin escalar), 10 a 15 % del presupuesto en testeo, 2 USD por día por anuncio en Latinoamérica, apagar a las 12 h lo que no tiene clics.",
+ 5: "Cobranza y forma de pago, no tráfico. Reembolsos altos son oferta o expectativa; caja corta es la caja necesaria de la proyección, tenela antes de escalar.",
+}
+PEOR = {"ROJO": 0, "AMARILLO": 1, "VERDE": 2, "SIN DATOS": 3, "SIN HISTÓRICO": 3}
 REF_CPM = {"visita": "bueno 3 a 8 % del CPM, es decir 12 a 30 visitas por cada 1.000 impresiones",
            "registro": "bueno 25 a 40 % del CPM (2,5 a 4 registros por cada 1.000 impresiones), aceptable hasta 67 %; con CPM de 3 un CPL de 1 y con CPM de 25 un CPL de 10 son el mismo embudo",
            "lead": "bueno 25 a 40 % del CPM (2,5 a 4 leads por cada 1.000 impresiones), aceptable hasta 67 %; con CPM de 3 un CPL de 1 y con CPM de 25 un CPL de 10 son el mismo embudo",
            "entrada": "normal entre 1 y 4 veces el CPM (0,25 a 1 entrada por cada 1.000 impresiones); lo que decide es el ROAS del front"}
-MERCADO = {"low_ticket": "visita → checkout 2 a 5 %", "webinar_gratuito": "visita → registro 15 a 30 %", "llamada": "visita → lead 15 a 30 %", "webinar_pago": "visita → entrada 1 a 3,5 %"}
+DIRECCION = {"cpu": "menor", "cpm": "menor", "costo_visita": "menor", "frecuencia": "menor", "reembolsos": "menor"}  # el resto: mayor es mejor
 
 def sem_rel(v, prom, direccion="mayor", tol=0.25):
     """Semáforo contra el promedio propio: verde = igual o mejor; amarillo = hasta `tol` peor; rojo = más que `tol` peor."""
@@ -146,8 +214,6 @@ def sem_rel(v, prom, direccion="mayor", tol=0.25):
     if direccion == "menor":
         return "VERDE" if v <= prom else ("AMARILLO" if v <= prom * (1 + tol) else "ROJO")
     return "VERDE" if v >= prom else ("AMARILLO" if v >= prom * (1 - tol) else "ROJO")
-
-def sem_mayor(v, t1, t2): return "ROJO" if v < t1 else ("AMARILLO" if v < t2 else "VERDE")
 
 def _contra(v, k, hist, tol, fmt, direccion=None):
     """Compara v con el promedio propio de la clave k. Devuelve (semáforo o None, texto)."""
@@ -157,38 +223,51 @@ def _contra(v, k, hist, tol, fmt, direccion=None):
     dif = d(v - prom, prom)
     return sem, f"tu promedio {fmt(prom)} ({'+' if dif >= 0 else ''}{dif*100:.0f} %)".replace(".", ",")
 
+def macro(e, s, m):
+    """¿Gana plata? ¿El ROAS sobre cash neto está sobre el piso de su tipo de embudo?"""
+    p = pisos(e, s); r = m["roas"]; g = m["profit"]
+    if g <= 0 or r < p["absoluto"]: sem = "ROJO"
+    elif r < p["escala"]: sem = "AMARILLO"
+    else: sem = "VERDE"
+    txt = (f"{'ganás' if g > 0 else 'perdés'} {money(abs(g))} en el período; ROAS sobre cash neto {ratio(r)} contra el piso de escala {ratio(p['escala'])} "
+           f"y el objetivo {ratio(p['objetivo'])} de un embudo {p['modo']}; nunca debajo de {ratio(p['absoluto'])}" + (f" ({p['nota']})" if p["nota"] else ""))
+    if sem == "VERDE": txt += ". Se escala hasta que el ROAS baje al piso de escala; a esa altura se frena y se arregla la fuga principal"
+    return sem, txt, p
+
 def radiografia(e, s, m, testeo=None, hist=None, tol=0.25):
-    """Lo que más importa, en orden, con semáforo CONTRA EL PROMEDIO PROPIO del usuario (hist). Sin histórico, la fila
-    queda SIN HISTÓRICO y muestra el rango de mercado solo como referencia. Las únicas reglas fijas son matemáticas:
-    ganancia negativa, costo por encima del techo (que sale de los números del usuario) y ROAS de caja por debajo de 1."""
+    """Lo que más importa, en orden: 1 macro (gana plata y ROAS sobre el piso) · 2 fugas por porcentaje entre pasos (percentiles de
+    la industria) · 3 ganancia por visita · 4 costo por unidad (solo relativo: techo propio, CPM del nicho, promedio propio) ·
+    5 testeo · 6 cash contra facturado. Sin histórico, las filas relativas quedan SIN HISTÓRICO."""
     hist = hist or {}; I = s["inversion"]; filas = []
+    sem_m, txt_m, p = macro(e, s, m)
+    filas.append((1, "Macro: ¿gana plata y el ROAS está sobre el piso?", txt_m, sem_m))
+    fl, principal, sem_f = fugas(e, s, m)
+    partes = [fmt_fuga(f) for f in fl]
+    txt = "; ".join(partes)
+    if principal:
+        txt += f". FUGA PRINCIPAL: {principal['label']} ({(ratio if principal['es_ratio'] else pct)(principal['valor'])}, {principal['brecha']*100:.0f} % debajo de la mediana): tocar {principal['tocar']}".replace(".0 %", " %")
+    filas.append((2, "Fugas en la cadena (porcentaje entre pasos contra percentiles de la industria)", txt, sem_f))
     vis = next((q for n, q, *_ in m["etapas"] if n.startswith("Visitas")), m["unidades"])
     gpv, cpv = d(m["profit"], vis), d(I, vis)
-    sem, txt = _contra(gpv, "gan_visita", hist, tol, money)
-    if gpv <= 0: sem, txt = "ROJO", "perdés plata por cada visita"
-    filas.append((1, "Ganancia por visita", f"{money(gpv)} por visita (costo por visita {money(cpv)}); {txt}", sem or "SIN HISTÓRICO"))
+    sem, t2 = _contra(gpv, "gan_visita", hist, tol, money)
+    if gpv <= 0: sem, t2 = "ROJO", "perdés plata por cada visita"
+    filas.append((3, "Ganancia por visita", f"{money(gpv)} por visita (costo por visita {money(cpv)}); {t2}", sem or "SIN HISTÓRICO"))
     sem_t = "ROJO" if m["cpu"] > m["techo"] else ("AMARILLO" if m["cpu"] > m["objetivo"] else "VERDE")
-    sem_h, txt = _contra(m["cpu"], "cpu", hist, tol, money)
+    sem_h, t3 = _contra(m["cpu"], "cpu", hist, tol, money)
     sem = min([x for x in (sem_t, sem_h) if x], key=lambda x: PEOR[x])
     cpm = s.get("cpm") or hist.get("cpm")
     if cpm:
-        por_mil = d(cpm, m["cpu"]); razon = d(m["cpu"], cpm)
-        ref = REF_CPM.get(m["unidad"], "")
-        txt_cpm = (f"; en tu nicho: {money(m['cpu'])} es el {razon*100:.0f} % de tu CPM de {money(cpm)}, {por_mil:.1f} {m['unidad']}s por cada 1.000 impresiones"
-                   + (f" (práctica: {ref})" if ref else ""))
-        txt_cpm = txt_cpm.replace(f"{por_mil:.1f}", f"{por_mil:.1f}".replace(".", ","))
+        por_mil = d(cpm, m["cpu"]); razon = d(m["cpu"], cpm); ref = REF_CPM.get(m["unidad"], "")
+        txt_cpm = f"; en tu nicho: {money(m['cpu'])} es el {razon*100:.0f} % de tu CPM de {money(cpm)}, {por_mil:.1f} {m['unidad']}s por cada 1.000 impresiones".replace(f"{por_mil:.1f}", f"{por_mil:.1f}".replace(".", ",")) + (f" (práctica: {ref})" if ref else "")
     else:
         txt_cpm = "; pasá tu CPM (--historico cpm=…) para leer el costo en relación a tu nicho: el umbral de costo depende del CPM"
-    filas.append((2, f"Costo por {m['unidad']}", f"{money(m['cpu'])} contra tu techo {money(m['techo'])} y tu objetivo {money(m['objetivo'])}; {txt}{txt_cpm}", sem))
-    k, lab, t1, t2 = LANDING[e]; v = s[k]
-    sem, txt = _contra(v, k, hist, tol, pct)
-    filas.append((3, "Conversión de la landing", f"{lab} {pct(v)}; {txt}" + ("" if sem else f" (sin histórico; punto de partida de mercado: {MERCADO[e]})"), sem or "SIN HISTÓRICO"))
+    filas.append((4, f"Costo por {m['unidad']} (solo relativo: nunca contra un número absoluto)", f"{money(m['cpu'])} contra tu techo {money(m['techo'])} y tu objetivo {money(m['objetivo'])}; {t3}{txt_cpm}", sem))
     if testeo:
         an = testeo.get("anuncios_nuevos"); pt = testeo.get("pct_testeo"); dg = testeo.get("dias_ganador"); fr = testeo.get("frecuencia")
         avisos, sems = [], []
         if an is not None:
             sh, th = _contra(an, "anuncios_nuevos", hist, tol, lambda x: f"{x:.0f}")
-            if an == 0: avisos.append("0 anuncios nuevos en 7 días"); sems.append("ROJO" if filas[1][3] != "VERDE" else "AMARILLO")
+            if an == 0: avisos.append("0 anuncios nuevos en 7 días"); sems.append("ROJO" if filas[3][3] != "VERDE" else "AMARILLO")
             elif sh: avisos.append(f"{an:.0f} anuncios nuevos por semana; {th}"); sems.append(sh)
             else: avisos.append(f"{an:.0f} anuncios nuevos por semana (sin histórico; práctica: 10 a 20 sin escalar, 20 a 50 escalando)")
         if fr is not None:
@@ -198,31 +277,30 @@ def radiografia(e, s, m, testeo=None, hist=None, tol=0.25):
         if pt is not None: avisos.append(f"testeo {pct(pt)} del presupuesto (práctica: 10 a 15 % escalando)")
         if dg is not None: avisos.append(f"el ganador principal tiene {dg:.0f} días")
         sem = min(sems, key=lambda x: PEOR[x]) if sems else "SIN HISTÓRICO"
-        filas.append((4, "Testeo", "; ".join(avisos) if avisos else "sin datos de testeo", sem))
+        filas.append((5, "Testeo", "; ".join(avisos) if avisos else "sin datos de testeo", sem))
     else:
-        filas.append((4, "Testeo", "sin datos: cargá anuncios nuevos por semana, % del presupuesto en testeo, días del ganador principal y frecuencia (--testeo), y tu ritmo habitual (--historico anuncios_nuevos=…)", "SIN HISTÓRICO"))
-    sem_h, txt = _contra(m["roas"], "roas", hist, tol, ratio)
-    sem_o = "ROJO" if m["roas"] <= 1.0 else ("VERDE" if m["roas"] >= s["roas_obj"] else "AMARILLO")
-    sem = min([x for x in (sem_o, sem_h) if x], key=lambda x: PEOR[x])
-    filas.append((5, "ROAS sobre cash neto", f"{ratio(m['roas'])} contra tu objetivo {ratio(s['roas_obj'])}; {txt}; el primer mes entra {ratio(m['roas_m1'])}", sem))
-    partes, sems = [], []
-    for k, lab, t1, t2 in CADENA_BENCH[e]:
-        sh, th = _contra(s[k], k, hist, tol, pct)
-        if sh: sems.append(sh); partes.append(f"{lab} {pct(s[k])} [{sh.lower()}; {th}]")
-        else: partes.append(f"{lab} {pct(s[k])} [sin histórico; mercado {pct(t1)} a {pct(t2)}+]")
-    filas.append((6, "Avance de la cadena", "; ".join(partes), min(sems, key=lambda x: PEOR[x]) if sems else "SIN HISTÓRICO"))
+        filas.append((5, "Testeo", "sin datos: cargá anuncios nuevos por semana, % del presupuesto en testeo, días del ganador principal y frecuencia (--testeo), y tu ritmo habitual (--historico anuncios_nuevos=…)", "SIN HISTÓRICO"))
     r = s["reembolsos"]; sh, th = _contra(r, "reembolsos", hist, tol, pct)
     sem = sh or "SIN HISTÓRICO"
     if m["roas_m1"] < 1.0: sem = "AMARILLO" if sem in ("VERDE", "SIN HISTÓRICO") else sem
-    filas.append((7, "Cash contra facturado", f"cobranza del primer mes {pct(s['cobro_m1'])}; el primer mes entra {ratio(m['roas_m1'])} la pauta" + (" (no cubre la pauta del mes que viene)" if m["roas_m1"] < 1.0 else "") + f"; reembolsos {pct(r)}; {th}", sem))
-    primero = next((f for f in filas if f[3] == "ROJO"), None) or next((f for f in filas if f[3] == "AMARILLO"), None)
-    sin_hist = [f[1] for f in filas if f[3] == "SIN HISTÓRICO"]
-    if primero is None:
-        decision = "Todo lo que tiene umbral está en verde: sostener o subir un escalón (+25 %) y medir 7 días. Si venís de bajar, dos semanas en verde antes de subir."
+    filas.append((6, "Cash contra facturado", f"cobranza del primer mes {pct(s['cobro_m1'])}; el primer mes entra {ratio(m['roas_m1'])} la pauta" + (" (no cubre la pauta del mes que viene)" if m["roas_m1"] < 1.0 else "") + f"; reembolsos {pct(r)}; {th}", sem))
+    # decisión: macro primero; después la fuga principal; después el resto
+    tocar = f"{principal['label']}: tocar {principal['tocar']}" if principal else "no hay fuga: la cadena está en la mediana o mejor en todos los pasos"
+    if sem_m == "ROJO":
+        decision = f"ROJO en Macro: no inviertas más hasta cerrar la fuga principal ({tocar}). " + ("Perdés plata: " if m["profit"] <= 0 else f"ROAS debajo del piso absoluto {ratio(p['absoluto'])}: ") + "primero la oferta y la cadena, después el tráfico."
+    elif sem_f == "ROJO":
+        decision = f"Hay una FUGA aunque el macro {'esté en verde' if sem_m == 'VERDE' else 'aguante'}: antes de escalar, cerrá {tocar}. Cerrar una fuga es ganar más sin pagar más."
+    elif sem_m == "AMARILLO":
+        decision = f"AMARILLO en Macro: ROAS {ratio(m['roas'])} entre el piso absoluto y el piso de escala ({ratio(p['escala'])}). No escales: sostené y mejorá lo mejorable ({tocar})."
+    elif sem_f == "AMARILLO":
+        decision = f"Macro en verde: podés subir un escalón (+25 %) y medir 7 días (frená cuando el ROAS baje a {ratio(p['escala'])}); y en paralelo mejorá lo mejorable ({tocar}): es ganancia sin pagar más."
     else:
-        decision = f"{primero[3]} en «{primero[1]}»: {ACCION[primero[0]]}"
+        resto = next((f for f in filas[2:] if f[3] == "ROJO"), None) or next((f for f in filas[2:] if f[3] == "AMARILLO"), None)
+        if resto: decision = f"{resto[3]} en «{resto[1]}»: {ACCION[resto[0] - 1]}"
+        else: decision = f"Todo en verde y sin fugas: subí un escalón (+25 %) y medí 7 días; frená cuando el ROAS baje a {ratio(p['escala'])}. Si venís de bajar, dos semanas en verde antes de subir."
+    sin_hist = [f[1] for f in filas if f[3] == "SIN HISTÓRICO"]
     if sin_hist:
-        decision += f" Sin umbral propio todavía en: {', '.join(sin_hist)}. Cargá la mediana de tus últimas 4 semanas (--historico o --periodos): el umbral de cada métrica es TU promedio, no un número de mercado."
+        decision += f" Sin umbral propio todavía en: {', '.join(sin_hist)}. Cargá la mediana de tus últimas 4 semanas (--historico o --periodos)."
     return filas, decision
 
 def pct(x): return f"{x*100:.1f}".replace(".", ",") + " %"
@@ -250,19 +328,19 @@ def entero(x): return f"{x:,.0f}".replace(",", ".")
 
 def reporte(e, s, testeo=None, hist=None, tol=0.25, proy=None, nombre=None):
     m = modelo(e, s); sens = sensibilidad(e, s); un = m["unidad"]
+    filas, decision = radiografia(e, s, m, testeo, hist, tol); m["radiografia"] = filas; m["decision"] = decision
     L = [f"EMBUDO: {e}" + (f" · {nombre}" if nombre else "") + "   (supuestos en uso: los que cargaste; lo demás, el ejemplo)",
-         "TUS UMBRALES (hasta cuánto pagar por cada paso, con lo que pagás hoy al lado):",
+         f"LO QUE MÁS IMPORTA, en orden (se para en el primer rojo). Primero el macro, después las fugas por porcentaje; los costos solo en relación al CPM y a tu promedio (tolerancia {tol:.0%}):"]
+    for n, nombre_f, lectura, sem in filas:
+        L.append(f"   [{sem:<9}] {n}. {nombre_f}: {lectura}")
+    L.append(f"DECISIÓN (una sola, medir 7 días): {decision}")
+    L += ["TUS UMBRALES (hasta cuánto pagar por cada paso, con lo que pagás hoy al lado):",
          f"Tu {un} vale (cash neto):            {money(m['vpu'])}",
          f"Hasta cuánto podés pagar (techo):    {money(m['techo'])}   <- acá no ganás ni perdés",
          f"Cuánto te conviene pagar (objetivo): {money(m['objetivo'])}   <- con {s['margen_seg']:.0%} de colchón",
          "Por cada paso: lo que pagás hoy, lo que te queda y lo máximo que podrías pagar (techo = costo + ganancia + fijos repartidos):"]
     for n, q, c, t, g in m["etapas"]:
         L.append(f"   {n:<24} cantidad {entero(q):>9}   pagás hoy {money(c):>10}   te queda {money(g):>10}   techo {money(t):>10}")
-    filas, decision = radiografia(e, s, m, testeo, hist, tol); m["radiografia"] = filas; m["decision"] = decision
-    L.append(f"LO QUE MÁS IMPORTA, en orden (se para en el primer rojo). Umbral de cada métrica: TU promedio, con {tol:.0%} de tolerancia; sin histórico, solo referencia de mercado:")
-    for n, nombre, lectura, sem in filas:
-        L.append(f"   [{sem:<9}] {n}. {nombre}: {lectura}")
-    L.append(f"DECISIÓN (una sola, medir 7 días): {decision}")
     L += [f"Con tu costo actual de {money(m['cpu'])} por {un}: SEMÁFORO {m['semaforo']}  (ROAS sobre cash neto {ratio(m['roas'])}; objetivo {ratio(s['roas_obj'])}; el primer mes entra {ratio(m['roas_m1'])})",
           f"Ganancia del período: {money(m['profit'])}   |   ganancia por {un}: {money(m['gan_unidad'])}   |   CPA {money(m['cpa'])}   |   AOV {money(m['aov'])} (neto {money(m['aov_neto'])})"]
     if m["inv_meta"] is None:
@@ -331,7 +409,9 @@ def main():
         return
     if a.json: s.update(json.load(open(a.json, encoding="utf-8")))
     for kv in a.set:
-        k, v = kv.split("="); s[k] = float(v)
+        k, v = kv.split("=")
+        try: s[k] = float(v)
+        except ValueError: s[k] = v
     testeo = dict(perfil.get("testeo", {})) or None
     if a.testeo is not None:
         testeo = dict(testeo or {})

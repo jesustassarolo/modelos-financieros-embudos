@@ -14,4 +14,4 @@ inversion 3000 (por lanzamiento) · costo_visita 0.35 · conv_entrada 0.025 · p
 
 Las conversiones van como fracción (15 % = 0.15). La "solicitud" es lo que hace el asistente cuando se presenta la oferta: completa el formulario de compra, la aplicación, o pide hablar con un vendedor. Los porcentajes de bumps, OTOs, programa y downsell van sobre los compradores del paso anterior.
 
-Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience
+Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience · youtube.com/@JesusTassaroloSinFiltro

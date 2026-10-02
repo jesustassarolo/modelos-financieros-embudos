@@ -336,7 +336,7 @@ Lo que dice es simple: lo que ya tenías (S0 × R0, tu cash neto actual) más lo
 
 Fijate dos cosas en la tabla. La primera: **está bien que el ROAS promedio baje cuando escalás.** Pasar de 3,52 a 2,04 triplicando la inversión no es un problema, es lo esperable; lo que no puede pasar es que baje más que la fila. La segunda: la ganancia mínima sube poco entre niveles (450 por cada 1.500 extra). Eso es lo que te está diciendo la regla: cada escalón nuevo tiene que sumar al menos un 30 % de lo que agregaste. Si la ganancia se queda igual o baja, no estás escalando, estás pagando más por lo mismo.
 
-Y debajo de todo, un piso que no negocio: **nunca operar debajo de 1,5 de ROAS sobre cash neto de forma sostenida**, en ningún nivel. Por debajo de 1,5 los fijos, el testeo y una semana mala te dejan en cero. Si estás ahí con el costo por lead en verde, el problema no es el tráfico: es la oferta o el cierre, y escalar lo único que hace es agrandar el agujero.
+Y debajo de todo, los pisos que no negocio. Se escala hasta que el ROAS sobre cash neto baja al **piso de escala** de tu tipo de embudo: **1,5 si es evergreen** (un low-ticket con VSL que corre todos los días, una llamada que capta todo el mes), **1,7 si es un lanzamiento o un webinar en vivo**, donde el objetivo es 2. A esa altura se frena, se cierra la fuga que haya y recién después se vuelve a subir. Y hay un **piso absoluto de 1,3** que no se cruza nunca, con una sola excepción: un low-ticket evergreen con mucha inversión y una escalera sólida (dos bumps, OTOs y ascensión) puede operar más abajo mientras la ganancia siga positiva, porque la escalera cobra lo que el front no cobra. Si estás debajo del piso con el costo por lead en verde, el problema no es el tráfico: es la oferta o el cierre, y escalar lo único que hace es agrandar el agujero.
 
 ### Los escalones: 25 % y siete días
 
@@ -365,7 +365,8 @@ La otra mitad de la regla es no matar lo que todavía da plata. A mí no me gust
 - **Subir un escalón (+25 %)**: los siete días del escalón actual en verde y el ROAS marginal del último escalón de 1,3 o más. Si venís de bajar, dos semanas en verde antes de volver a subir.
 - **Sostener**: amarillo. Arreglás el eslabón que falla (capítulo 6) antes de volver a subir.
 - **Bajar un escalón (−25 %)**: rojo, o el ROAS del nivel por debajo del mínimo del guardarraíl durante siete días.
-- **Pausar y revisar la oferta**: ROAS sobre cash neto por debajo de 1,5 sostenido con el costo por unidad en verde. El tráfico no es el problema.
+- **Frenar la escalada**: cuando el ROAS sobre cash neto baja al piso de escala de tu embudo (1,5 evergreen, 1,7 lanzamiento). Se sostiene y se cierra la fuga antes de volver a subir.
+- **Pausar y revisar la oferta**: ROAS sobre cash neto por debajo de 1,3 sostenido, con el costo por unidad en verde. El tráfico no es el problema.
 - **Nunca** por un día, nunca dos palancas a la vez, nunca saltos grandes.
 
 Y cuando tengas históricos, cada hora mirada y anuncios nuevos todos los días, vas a poder hacer lo que hago yo: ROAS 2, pisá a fondo; cae el ROAS, bajá hoy mismo. Pero eso se gana con las semanas de Seguimiento cargadas, no se decide.

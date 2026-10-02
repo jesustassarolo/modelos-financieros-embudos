@@ -12,7 +12,8 @@ Bloque 1 (siete datos): tipo de embudo · inversión del período · CPM · visi
 
 ## 2. Qué devuelve, siempre en este orden
 
-1. **Tus umbrales:** cuánto vale tu unidad (techo), cuánto te conviene pagar (objetivo = techo ÷ 1,3) y el techo de cada paso del medio (grupo, asistente, solicitud, agenda, comprador), con lo que pagás hoy al lado.
+0. **Tu macro y tus fugas:** si ganás plata y si tu ROAS sobre cash neto está sobre el piso de tu tipo de embudo (1,5 evergreen; 1,7 con objetivo 2,0 lanzamiento; nunca bajo 1,3), y los porcentajes entre pasos contra percentiles de la industria y contra tu promedio, con la fuga principal y qué tocar. Es lo primero porque lo que se evalúa son umbrales, no costos (`reference/umbrales.md`).
+1. **Tus umbrales de costo:** cuánto vale tu unidad (techo), cuánto te conviene pagar (objetivo = techo ÷ 1,3) y el techo de cada paso del medio (grupo, asistente, solicitud, agenda, comprador), con lo que pagás hoy al lado.
 2. **Tu radiografía:** lo que más importa, en orden y con semáforo contra tu promedio (ganancia por visita, costo por unidad contra techo y contra tu CPM, conversión de la landing, testeo, ROAS, cadena, caja). Sin histórico, la fila dice "sin histórico" y muestra el punto de partida de mercado como referencia.
 3. **Tu proyección:** doce meses con la inversión creciendo al ritmo que elijas (10 % por mes por defecto), con tu cobranza por mes: unidades, ventas, facturado, cash cobrado, ganancia de caja mes a mes, ganancia acumulada y **caja necesaria** (el peor momento del acumulado). Y cuánto invertir para tu meta de ventas.
 4. **Una sola decisión** y qué medir en 7 días.
@@ -21,7 +22,7 @@ Bloque 1 (siete datos): tipo de embudo · inversión del período · CPM · visi
 
 ## 3. Reglas que no se negocian
 
-- Los umbrales son los promedios de la persona (mediana de sus últimas 4 semanas), con 20 a 30 % de tolerancia. No se inventan umbrales. Sin históricos, se dice y se pide cargar 4 semanas.
+- Primero el macro (gana plata y ROAS sobre el piso de su tipo de embudo), después las fugas por porcentaje entre pasos, al final los costos. Los umbrales relativos son los promedios de la persona (mediana de sus últimas 4 semanas), con 20 a 30 % de tolerancia; los de conversión, percentiles de la industria. No se inventan umbrales de costo. Sin históricos, se dice y se pide cargar 4 semanas.
 - El costo se lee contra el CPM del nicho: un CPL de 1 con CPM de 3 y un CPL de 10 con CPM de 25 son el mismo embudo. Nunca juzgues un CPL sin el CPM.
 - Cash neto, nunca facturado. Una palanca por vez. Nada se decide por un día; en llamada, 3 o 4 eventos.
 - Eficiencia: dos mensajes de preguntas como máximo; después, siempre respuesta completa. No pidas lo que ya está en el perfil.

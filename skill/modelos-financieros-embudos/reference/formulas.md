@@ -16,7 +16,7 @@ objetivo               = techo ÷ (1 + margen de seguridad)                     
 techo del paso k       = valor neto por unidad ÷ conversión acumulada hasta k
 costo del paso k       = inversión ÷ cantidad en k
 ganancia por paso k    = ganancia del período ÷ cantidad en k                  ← la ganancia por visita es la más valiosa
-margen por visita      = ganancia por visita ÷ costo por visita                 ← rojo < 0,3 · amarillo 0,3 a 1,0 · verde ≥ 1,0
+ganancia por visita    = ganancia del período ÷ visitas                       ← se juzga contra tu promedio (mediana de 4 semanas); rojo solo si es negativa
 inversión para la meta = ventas meta ÷ conversión (unidad → venta) × costo por unidad
 ROAS sobre cash neto   = cash neto ÷ inversión   (ROAS del mes 1 = igual, con la cobranza del mes 1)
 semáforo               = ROJO si costo > techo · VERDE si costo ≤ objetivo y ROAS ≥ objetivo · AMARILLO el resto
@@ -26,6 +26,6 @@ techo por paso         = costo por paso + ganancia por paso + fijos ÷ cantidad 
 
 Pasos sin costo propio (bumps, OTOs, ascensión, downsell): no se les calcula costo ni techo; se pagan con el CPA del comprador principal y se miden por lo que suman al AOV (order value). AOV neto = (cash neto − costos por unidad) ÷ compradores del principal; su par es el CPA.
 
-Rendimientos decrecientes: a más inversión, menos ROAS. Lo que decide subir es el ROAS marginal (lo que devolvió la última subida): si el cash neto subió menos de 1,3 veces lo que subió la inversión, se vuelve atrás. Piso: nunca debajo de 1,5 sostenido una semana. Guardarraíl por nivel: ROAS mínimo(S) = (S0 × R0 + 1,3 × (S − S0)) ÷ S, con S0 y R0 la inversión y el ROAS actuales.
+Rendimientos decrecientes: a más inversión, menos ROAS. Lo que decide subir es el ROAS marginal (lo que devolvió la última subida): si el cash neto subió menos de 1,3 veces lo que subió la inversión, se vuelve atrás. Pisos de ROAS sobre cash neto por tipo de embudo (umbrales.md § 1): se escala hasta 1,5 (evergreen) o 1,7 con objetivo 2,0 (lanzamiento); nunca debajo de 1,3 salvo low-ticket evergreen con mucha inversión y escalera sólida. Guardarraíl por nivel: ROAS mínimo(S) = (S0 × R0 + 1,3 × (S − S0)) ÷ S, con S0 y R0 la inversión y el ROAS actuales.
 
-Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience
+Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience · youtube.com/@JesusTassaroloSinFiltro

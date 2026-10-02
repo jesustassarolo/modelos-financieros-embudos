@@ -1,19 +1,66 @@
 {
-  "_instrucciones": "Completá con tus números y guardá este archivo como perfil/mi_embudo.json. Porcentajes como fracción (15 % = 0.15). Borrá las claves que no tengas: la skill usa el ejemplo y te avisa. Guía: PERFIL.md.",
+  "_instrucciones": "Completá con tus números y guardá este archivo como perfil/mi_embudo.json. Porcentajes como fracción (15 % = 0.15). Borrá las claves que no tengas: la skill usa el ejemplo y te avisa. Guía: PERFIL.md. 'modo' es evergreen o lanzamiento (define el piso de ROAS); 'escalera_solida' 1 si tu low-ticket tiene 2 bumps y OTOs.",
   "nombre": "Mi embudo",
   "embudo": "webinar_gratuito",
   "supuestos": {
-    "inversion": 6000, "cpm": 4.5, "ctr": 0.022, "clic_visita": 0.90, "conv_landing": 0.23, "calif_pct": 0.60, "grupo_pct": 0.67,
-    "show_vivo": 0.15, "show_replay": 0.55, "solic_vivo_pct": 0.10, "solic_replay_pct": 0.025, "cierre_pct": 0.40,
-    "precio_oferta": 297, "bump_precio": 47, "bump_conv": 0.20, "backend_precio": 997, "backend_conv": 0.05,
-    "pasarela": 0.10, "closers": 0.0, "reembolsos": 0.05, "costo_semivar": 0.10, "fijos": 1200, "cobro_m1": 0.70,
-    "roas_obj": 2.0, "margen_seg": 0.30, "meta_ventas": 60
+    "inversion": 6000,
+    "cpm": 4.5,
+    "ctr": 0.022,
+    "clic_visita": 0.9,
+    "conv_landing": 0.23,
+    "calif_pct": 0.6,
+    "grupo_pct": 0.67,
+    "show_vivo": 0.15,
+    "show_replay": 0.55,
+    "solic_vivo_pct": 0.1,
+    "solic_replay_pct": 0.025,
+    "cierre_pct": 0.4,
+    "precio_oferta": 297,
+    "bump_precio": 47,
+    "bump_conv": 0.2,
+    "backend_precio": 997,
+    "backend_conv": 0.05,
+    "pasarela": 0.1,
+    "closers": 0.0,
+    "reembolsos": 0.05,
+    "costo_semivar": 0.1,
+    "fijos": 1200,
+    "cobro_m1": 0.7,
+    "roas_obj": 2.0,
+    "margen_seg": 0.3,
+    "meta_ventas": 60,
+    "modo": "lanzamiento",
+    "escalera_solida": 0
   },
   "historico": {
-    "cpu": 1.02, "gan_visita": 0.48, "conv_landing": 0.22, "show_vivo": 0.15, "solic_vivo_pct": 0.10, "cierre_pct": 0.40,
-    "roas": 3.2, "anuncios_nuevos": 12, "frecuencia": 1.9, "reembolsos": 0.05, "cpm": 4.6
+    "cpu": 1.02,
+    "gan_visita": 0.48,
+    "conv_landing": 0.22,
+    "show_vivo": 0.15,
+    "solic_vivo_pct": 0.1,
+    "cierre_pct": 0.4,
+    "roas": 3.2,
+    "anuncios_nuevos": 12,
+    "frecuencia": 1.9,
+    "reembolsos": 0.05,
+    "cpm": 4.6
   },
-  "testeo": { "anuncios_nuevos": 10, "pct_testeo": 0.10, "dias_ganador": 18, "frecuencia": 2.0 },
-  "proyeccion": { "meses": 12, "crecimiento": 0.10, "lanz_mes": 4, "cobranza": [0.70, 0.15, 0.15], "caja_inicial": 5000 },
+  "testeo": {
+    "anuncios_nuevos": 10,
+    "pct_testeo": 0.1,
+    "dias_ganador": 18,
+    "frecuencia": 2.0
+  },
+  "proyeccion": {
+    "meses": 12,
+    "crecimiento": 0.1,
+    "lanz_mes": 4,
+    "cobranza": [
+      0.7,
+      0.15,
+      0.15
+    ],
+    "caja_inicial": 5000
+  },
   "tolerancia": 0.25
 }

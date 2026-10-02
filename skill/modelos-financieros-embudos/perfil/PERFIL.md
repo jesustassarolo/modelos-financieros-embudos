@@ -4,7 +4,7 @@ Copiá `mi_embudo.json`, completalo con tus números y guardalo con el mismo nom
 
 ## Qué va en cada bloque
 
-- **embudo:** `low_ticket`, `webinar_gratuito`, `llamada` o `webinar_pago`.
+- **embudo:** `low_ticket`, `webinar_gratuito`, `llamada` o `webinar_pago`. En supuestos, `modo` (`evergreen` o `lanzamiento`) define el piso de ROAS con el que se te juzga, y `escalera_solida` (1 si tu low-ticket tiene 2 bumps y OTOs) habilita la excepción del piso.
 - **supuestos:** tus números del período (los nombres exactos están en `../reference/embudos.md`, con el valor de ejemplo de cada embudo). Porcentajes como fracción: 15 % = 0.15. Lo que no completes toma el valor del ejemplo y la skill lo marca como supuesto.
 - **historico:** la **mediana de tus últimas 4 semanas** de cada métrica que tengas: `cpu` (tu CPL, costo por visita o por entrada), `gan_visita`, `conv_landing` (o `conv_checkout` / `conv_entrada`), `show_vivo`, `solic_vivo_pct`, `cierre_pct` (o `cierre`), `roas`, `anuncios_nuevos`, `frecuencia`, `reembolsos`, `cpm`. Con esto los umbrales son tuyos; sin esto, la skill usa puntos de partida de mercado y te lo dice.
 - **testeo:** `anuncios_nuevos` (publicados en los últimos 7 días), `pct_testeo` (parte del presupuesto en testeo), `dias_ganador` (edad de tu anuncio principal), `frecuencia`.
