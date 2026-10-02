@@ -8,11 +8,15 @@ Uso:
   python3 calculadora.py --embudo llamada --set cpm=12 cierre=0.3 ticket=2000
   python3 calculadora.py --embudo low_ticket --json mis_datos.json --html grafico.html
   python3 calculadora.py --embudo webinar_pago --supuestos               # lista los supuestos que acepta
-Salida: el bloque de respuesta (valor por unidad, techo, objetivo, techos por etapa, semáforo, inversión para la meta,
-palanca que más mueve) y, con --html, un gráfico (embudo, costo vs techo por paso, sensibilidad) con marca de agua.
+  python3 calculadora.py --embudo webinar_gratuito --testeo anuncios_nuevos=12 pct_testeo=0.10 dias_ganador=20 frecuencia=2.1
+Salida: el bloque de respuesta (valor por unidad, techo, objetivo, costo / ganancia / techo por paso, la radiografía de lo que
+más importa con semáforo y UNA decisión, inversión para la meta, palanca que más mueve) y, con --html, un gráfico con marca de agua.
 """
 import argparse, json, sys
-MARCA = "Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience · youtube.com/@JesusTassaroloSinFiltro"
+AUTOR = "Jesús Tassarolo"
+INSTAGRAM = ""   # usuario de Instagram del autor (p. ej. "@usuario"); si está, viaja en la marca de agua
+MARCA = ("Modelo financiero de embudos · creado por " + AUTOR + " · TooAudience" + (" · Instagram " + INSTAGRAM if INSTAGRAM else "")
+         + " · youtube.com/@JesusTassaroloSinFiltro")
 
 # ------------------------------------------------------------ supuestos por embudo (los del ejemplo de cada Excel)
 SUPUESTOS = {
@@ -105,10 +109,83 @@ def sensibilidad(e, s):
         s2 = dict(s); s2[k] = s[k] * mult; out.append((lab, modelo(e, s2)["profit"] - base))
     return sorted(out, key=lambda x: -x[1])
 
+# ------------------------------------------------------------ lo que más importa (radiografía): umbrales 'mayor es mejor'
+# (rojo si < t1, amarillo si < t2, verde si >= t2); los mismos de reference/benchmarks.md
+LANDING = {"low_ticket": ("conv_checkout", "visita → checkout", 0.02, 0.03), "webinar_gratuito": ("conv_landing", "visita → registro", 0.15, 0.22),
+           "llamada": ("conv_landing", "visita → lead", 0.15, 0.22), "webinar_pago": ("conv_entrada", "visita → entrada", 0.01, 0.02)}
+CADENA_BENCH = {
+ "low_ticket": [("conv_venta", "checkout → compra", 0.15, 0.22), ("bump1_conv", "bump 1 tomado", 0.15, 0.25), ("oto1_conv", "OTO 1 tomada", 0.05, 0.09)],
+ "webinar_gratuito": [("grupo_pct", "registro → grupo", 0.50, 0.65), ("show_vivo", "registro → en vivo", 0.10, 0.15), ("solic_vivo_pct", "en vivo → solicitud", 0.05, 0.10), ("cierre_pct", "solicitud → compra", 0.25, 0.40)],
+ "llamada": [("aplic_pct", "lead → aplicación", 0.05, 0.10), ("agenda_pct", "calificado → agenda", 0.40, 0.55), ("show_llamada", "agenda → llamada", 0.55, 0.65), ("cierre", "llamada → venta", 0.15, 0.25)],
+ "webinar_pago": [("show_vivo", "entrada → en vivo", 0.35, 0.50), ("solic_vivo_pct", "en vivo → solicitud", 0.08, 0.14), ("cierre_pct", "solicitud → compra", 0.25, 0.40)],
+}
+ACCION = {
+ 1: "El problema está después de la página (si el costo por visita está en verde): landing, show, oferta, cierre y cobranza, en ese orden. No toques el presupuesto.",
+ 2: "Tráfico caro: CPM → CTR → clic a visita → conversión de la landing, en ese orden. Anuncios nuevos hoy. Nunca bajar presupuesto para 'arreglar' el CPL.",
+ 3: "La palanca más barata: la misma promesa que el anuncio, formulario más corto, velocidad, un solo llamado a la acción. Una tarde de trabajo; medir 7 días.",
+ 4: "Alimentá el embudo: 20 a 50 piezas nuevas por semana escalando (10 a 20 sin escalar), 10 a 15 % del presupuesto en testeo, 2 USD por día por anuncio en Latinoamérica, apagar a las 12 h lo que no tiene clics.",
+ 5: "El tráfico no es el problema: pausá la escalada y revisá oferta, pitch y cierre. Si venís de subir un escalón, volvé al anterior.",
+ 6: "Arreglá el eslabón más bajo: asistencia (recordatorios, grupo, horario, nutrición), solicitudes (congruencia, claridad, pitch), cierre (seguimiento en minutos, guion, cuotas).",
+ 7: "Cobranza y forma de pago, no tráfico. Reembolsos altos son oferta o expectativa; caja corta es la caja necesaria de la proyección, tenela antes de escalar.",
+}
+PEOR = {"ROJO": 0, "AMARILLO": 1, "VERDE": 2, "SIN DATOS": 3}
+
+def sem_mayor(v, t1, t2): return "ROJO" if v < t1 else ("AMARILLO" if v < t2 else "VERDE")
+
+def radiografia(e, s, m, testeo=None):
+    """Lo que más importa, en orden, con semáforo. Devuelve (filas, decisión). Cada fila: (n, nombre, lectura, semáforo)."""
+    I = s["inversion"]; filas = []
+    vis = next((q for n, q, *_ in m["etapas"] if n.startswith("Visitas")), m["unidades"])
+    gpv, cpv = d(m["profit"], vis), d(I, vis); margen = d(gpv, cpv)
+    sem = "ROJO" if gpv <= 0 or margen < 0.3 else ("AMARILLO" if margen < 1.0 else "VERDE")
+    filas.append((1, "Ganancia por visita", f"{money(gpv)} por visita contra {money(cpv)} de costo por visita (margen {ratio(margen)}; verde desde 1,0x)", sem))
+    sem = "ROJO" if m["cpu"] > m["techo"] else ("AMARILLO" if m["cpu"] > m["objetivo"] else "VERDE")
+    filas.append((2, f"Costo por {m['unidad']}", f"{money(m['cpu'])} contra objetivo {money(m['objetivo'])} y techo {money(m['techo'])}", sem))
+    k, lab, t1, t2 = LANDING[e]; v = s[k]
+    filas.append((3, "Conversión de la landing", f"{lab} {pct(v)} (amarillo desde {pct(t1)}, verde desde {pct(t2)})", sem_mayor(v, t1, t2)))
+    if testeo:
+        an = testeo.get("anuncios_nuevos"); pt = testeo.get("pct_testeo"); dg = testeo.get("dias_ganador"); fr = testeo.get("frecuencia")
+        avisos, sems = [], []
+        if an is not None:
+            if an == 0: avisos.append("0 anuncios nuevos en 7 días"); sems.append("ROJO" if filas[1][3] != "VERDE" else "AMARILLO")
+            elif an < 10: avisos.append(f"{an:.0f} anuncios nuevos por semana (escalando hacen falta 20 a 50)"); sems.append("AMARILLO")
+            else: sems.append("VERDE")
+        if pt is not None:
+            if pt < 0.05: avisos.append(f"testeo {pct(pt)} del presupuesto (hace falta 10 a 15 %)"); sems.append("AMARILLO")
+            else: sems.append("VERDE")
+        if fr is not None:
+            if fr > 3: avisos.append(f"frecuencia {ratio(fr)[:-1]}: audiencia saturada"); sems.append("ROJO")
+            elif fr > 2.5: avisos.append(f"frecuencia {ratio(fr)[:-1]}: cerca de saturar"); sems.append("AMARILLO")
+            else: sems.append("VERDE")
+        if dg is not None:
+            if dg > 28: avisos.append(f"el ganador principal tiene {dg:.0f} días: preparar el reemplazo"); sems.append("AMARILLO")
+            else: sems.append("VERDE")
+        sem = min(sems, key=lambda x: PEOR[x]) if sems else "SIN DATOS"
+        filas.append((4, "Testeo", "; ".join(avisos) if avisos else "ritmo de testeo sano", sem))
+    else:
+        filas.append((4, "Testeo", "sin datos: cargá anuncios nuevos por semana, % del presupuesto en testeo, días del ganador principal y frecuencia", "SIN DATOS"))
+    sem = "ROJO" if m["roas"] < 1.5 else ("AMARILLO" if m["roas"] < s["roas_obj"] else "VERDE")
+    filas.append((5, "ROAS sobre cash neto", f"{ratio(m['roas'])} contra objetivo {ratio(s['roas_obj'])} (piso 1,5x; el primer mes entra {ratio(m['roas_m1'])})", sem))
+    partes, sems = [], []
+    for k, lab, t1, t2 in CADENA_BENCH[e]:
+        sv = sem_mayor(s[k], t1, t2); sems.append(sv); partes.append(f"{lab} {pct(s[k])} [{sv.lower()}]")
+    filas.append((6, "Avance de la cadena", "; ".join(partes), min(sems, key=lambda x: PEOR[x])))
+    r = s["reembolsos"]
+    sem = "ROJO" if r > 0.10 else ("AMARILLO" if r > 0.07 or m["roas_m1"] < 1.0 else "VERDE")
+    filas.append((7, "Cash contra facturado", f"cobranza del primer mes {pct(s['cobro_m1'])}; el primer mes entra {ratio(m['roas_m1'])} la pauta; reembolsos {pct(r)}", sem))
+    primero = next((f for f in filas if f[3] == "ROJO"), None) or next((f for f in filas if f[3] == "AMARILLO"), None)
+    if primero is None:
+        decision = "Todo en verde: sostener o subir un escalón (+25 %) y medir 7 días. Si venís de bajar, dos semanas en verde antes de subir."
+    else:
+        decision = f"{primero[3]} en «{primero[1]}»: {ACCION[primero[0]]}"
+    return filas, decision
+
+def pct(x): return f"{x*100:.1f}".replace(".", ",") + " %"
+def ratio(x): return f"{x:.2f}".replace(".", ",") + "x"
 def money(x): return ("$" + f"{x:,.2f}").replace(",", "X").replace(".", ",").replace("X", ".")
 def entero(x): return f"{x:,.0f}".replace(",", ".")
 
-def reporte(e, s):
+def reporte(e, s, testeo=None):
     m = modelo(e, s); sens = sensibilidad(e, s); un = m["unidad"]
     L = [f"EMBUDO: {e}   (supuestos en uso: los que cargaste; lo demás, el ejemplo)",
          f"Tu {un} vale (cash neto):            {money(m['vpu'])}",
@@ -117,7 +194,12 @@ def reporte(e, s):
          "Por cada paso: lo que pagás hoy, lo que te queda y lo máximo que podrías pagar (techo = costo + ganancia + fijos repartidos):"]
     for n, q, c, t, g in m["etapas"]:
         L.append(f"   {n:<24} cantidad {entero(q):>9}   pagás hoy {money(c):>10}   te queda {money(g):>10}   techo {money(t):>10}")
-    L += [f"Con tu costo actual de {money(m['cpu'])} por {un}: SEMÁFORO {m['semaforo']}  (ROAS sobre cash neto {m['roas']:.2f}x; objetivo {s['roas_obj']:.1f}x; el primer mes entra {m['roas_m1']:.2f}x)",
+    filas, decision = radiografia(e, s, m, testeo); m["radiografia"] = filas; m["decision"] = decision
+    L.append("LO QUE MÁS IMPORTA, en orden (se para en el primer rojo):")
+    for n, nombre, lectura, sem in filas:
+        L.append(f"   [{sem:<9}] {n}. {nombre}: {lectura}")
+    L.append(f"DECISIÓN (una sola, medir 7 días): {decision}")
+    L += [f"Con tu costo actual de {money(m['cpu'])} por {un}: SEMÁFORO {m['semaforo']}  (ROAS sobre cash neto {ratio(m['roas'])}; objetivo {ratio(s['roas_obj'])}; el primer mes entra {ratio(m['roas_m1'])})",
           f"Ganancia del período: {money(m['profit'])}   |   ganancia por {un}: {money(m['gan_unidad'])}   |   CPA {money(m['cpa'])}   |   AOV {money(m['aov'])} (neto {money(m['aov_neto'])})"]
     if m["inv_meta"] is None:
         L.append(f"Para {s['meta_ventas']} ventas por período: inalcanzable con estos supuestos (la conversión a venta es 0)")
@@ -143,6 +225,9 @@ def html(e, s, m, sens, path):
 <body style="font-family:Inter,Helvetica,Arial,sans-serif;margin:24px;color:#0A0A0B">
 <h1 style="font-size:22px;margin:0 0 4px">Modelo financiero · {e.replace("_"," ")}</h1>
 <p style="color:#3D3D40;margin:0 0 14px">Tu {m["unidad"]} vale <b>{money(m["vpu"])}</b> · techo <b>{money(m["techo"])}</b> · objetivo <b>{money(m["objetivo"])}</b> · costo hoy <b>{money(m["cpu"])}</b> · semáforo <b style="color:{"#00996A" if m["semaforo"]=="VERDE" else ("#B45309" if m["semaforo"]=="AMARILLO" else "#DC2626")}">{m["semaforo"]}</b> · ROAS cash neto <b>{m["roas"]:.2f}x</b> · ganancia <b>{money(m["profit"])}</b></p>
+<h2 style="font-size:15px;margin:0 0 6px">Lo que más importa, en orden</h2>
+<table style="border-collapse:collapse;font-size:12px;margin:0 0 14px">{"".join(f'<tr><td style="padding:3px 8px 3px 0;white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:{ {"VERDE":"#00996A","AMARILLO":"#F59E0B","ROJO":"#DC2626"}.get(sem,"#9A9A9E") };margin-right:6px"></span><b>{n}. {nombre}</b></td><td style="padding:3px 0;color:#3D3D40">{lectura}</td></tr>' for n, nombre, lectura, sem in m.get("radiografia", []))}</table>
+<p style="font-size:13px;margin:0 0 14px"><b>Decisión:</b> {m.get("decision", "")}</p>
 <svg viewBox="0 0 {W} {H}" width="100%" style="max-width:{W}px;display:block">
 <text x="10" y="22" font-size="14" font-weight="700">El embudo: cantidad por paso (barra), costo hoy vs techo (punto: verde dentro del objetivo, ámbar entre objetivo y techo, rojo por encima)</text>{rows}
 <text x="10" y="{y+18}" font-size="14" font-weight="700">Qué palanca mueve más la ganancia (+10 % en cada una)</text>{srows}
@@ -156,6 +241,7 @@ def main():
     ap.add_argument("--set", nargs="*", default=[], help="clave=valor (porcentajes como 0.15)")
     ap.add_argument("--html", help="escribe un gráfico HTML en esta ruta")
     ap.add_argument("--supuestos", action="store_true", help="lista los supuestos y sus valores de ejemplo")
+    ap.add_argument("--testeo", nargs="*", default=None, help="datos de testeo: anuncios_nuevos=12 pct_testeo=0.10 dias_ganador=20 frecuencia=2.1")
     a = ap.parse_args(); s = dict(SUPUESTOS[a.embudo])
     if a.supuestos:
         for k, v in s.items(): print(f"{k} = {v}")
@@ -163,7 +249,12 @@ def main():
     if a.json: s.update(json.load(open(a.json, encoding="utf-8")))
     for kv in a.set:
         k, v = kv.split("="); s[k] = float(v)
-    texto, m, sens = reporte(a.embudo, s); print(texto)
+    testeo = None
+    if a.testeo is not None:
+        testeo = {}
+        for kv in a.testeo:
+            k, v = kv.split("="); testeo[k] = float(v)
+    texto, m, sens = reporte(a.embudo, s, testeo); print(texto)
     if a.html:
         html(a.embudo, s, m, sens, a.html); print(f"gráfico: {a.html}")
 

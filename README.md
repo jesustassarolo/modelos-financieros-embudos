@@ -9,7 +9,7 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 | Carpeta | Qué es |
 |---|---|
 | `excel/` | Los cuatro modelos, uno por embudo, con un negocio de ejemplo cargado: **01** low-ticket con VSL (producto principal, bumps 1 y 2, OTO 1 a 4, ascensión) · **02** webinar gratuito · **03** embudo de llamada (high ticket) · **04** webinar pago. Funcionan en Excel, Google Sheets y Numbers, sin macros. |
-| `skill/` | La skill `modelos-financieros-embudos` para Claude: te pregunta tus datos y te dice cuánto vale tu lead, hasta cuánto podés pagar, cuánto te conviene pagar, cuánto invertir y qué palanca mover, con un gráfico. Carpeta lista y `.zip` para subir. |
+| `skill/` | La skill `modelos-financieros-embudos` para Claude: te pide tus datos en orden de importancia y te devuelve la radiografía de tu embudo (lo que más importa, en orden y con semáforo: ganancia por visita, costo por lead contra el techo, conversión de la landing, testeo, ROAS, cadena y caja), una sola decisión y qué medir en 7 días; además calcula cuánto vale tu lead, hasta cuánto pagarlo, cuánto invertir, arma tu plan de testeo y dibuja el gráfico. Carpeta lista y `.zip` para subir. |
 | `paper/` | *Modelos financieros de embudos: cuánto invertir, cuánto pagar y cuándo frenar*. Los conceptos detrás de cada consejo, con figuras y las tablas de ejemplo de los cuatro embudos. PDF y fuente en markdown. |
 | `generador/` | El código que genera y verifica los Excel (Python, `openpyxl`). Para quien quiera ver cómo están hechas las fórmulas o regenerarlos. |
 
@@ -25,7 +25,7 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 
 - **En claude.ai**: Configuración → Capacidades → Skills → subir `skill/modelos-financieros-embudos-skill.zip`. Después preguntale a Claude, por ejemplo: "¿hasta cuánto puedo pagar por lead en mi webinar?" y seguí sus preguntas.
 - **En Claude Code**: copiá la carpeta `skill/modelos-financieros-embudos` a `~/.claude/skills/`.
-- **Sin Claude**, la calculadora sola: `python3 skill/modelos-financieros-embudos/scripts/calculadora.py --embudo webinar_gratuito --set cpm=4.5 ctr=0.022 conv_landing=0.23 --html grafico.html` (no necesita librerías; `--supuestos` lista los parámetros).
+- **Sin Claude**, la calculadora sola: `python3 skill/modelos-financieros-embudos/scripts/calculadora.py --embudo webinar_gratuito --set cpm=4.5 ctr=0.022 conv_landing=0.23 --testeo anuncios_nuevos=12 pct_testeo=0.10 frecuencia=2.1 --html grafico.html` (no necesita librerías; `--supuestos` lista los parámetros; `--testeo` es opcional y alimenta la fila de testeo de la radiografía).
 
 ## Los cuatro embudos
 

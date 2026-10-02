@@ -16,10 +16,12 @@ objetivo               = techo ÷ (1 + margen de seguridad)                     
 techo del paso k       = valor neto por unidad ÷ conversión acumulada hasta k
 costo del paso k       = inversión ÷ cantidad en k
 ganancia por paso k    = ganancia del período ÷ cantidad en k                  ← la ganancia por visita es la más valiosa
+margen por visita      = ganancia por visita ÷ costo por visita                 ← rojo < 0,3 · amarillo 0,3 a 1,0 · verde ≥ 1,0
 inversión para la meta = ventas meta ÷ conversión (unidad → venta) × costo por unidad
 ROAS sobre cash neto   = cash neto ÷ inversión   (ROAS del mes 1 = igual, con la cobranza del mes 1)
 semáforo               = ROJO si costo > techo · VERDE si costo ≤ objetivo y ROAS ≥ objetivo · AMARILLO el resto
 identidad              = ganancia = unidades × (valor neto por unidad − costo por unidad) − fijos
+techo por paso         = costo por paso + ganancia por paso + fijos ÷ cantidad en k    ← por eso el techo es mayor que la ganancia
 ```
 
 Pasos sin costo propio (bumps, OTOs, ascensión, downsell): no se les calcula costo ni techo; se pagan con el CPA del comprador principal y se miden por lo que suman al AOV (order value). AOV neto = (cash neto − costos por unidad) ÷ compradores del principal; su par es el CPA.
