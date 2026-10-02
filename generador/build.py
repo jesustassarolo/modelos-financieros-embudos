@@ -20,6 +20,9 @@ def main():
         path = os.path.join(out, spec["archivo"])
         Builder(spec).build(path)
         print("OK", path, f"{os.path.getsize(path)//1024} KB")
+        sim = os.path.join(out, "simuladores", spec["archivo"].replace("Modelo_Financiero", "Simulacion"))
+        Builder(spec).build_simulacion(sim)
+        print("OK", sim, f"{os.path.getsize(sim)//1024} KB")
 
 
 if __name__ == "__main__":

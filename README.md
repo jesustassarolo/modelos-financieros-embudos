@@ -18,9 +18,12 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 1. Abrí el del embudo que usás. La hoja **Inicio** es el instructivo.
 2. En **Supuestos** reemplazá el ejemplo por tus números (amarillo = se edita, azul = se calcula). Si no tenés datos, escenario 1 (conservador) y la hoja **Benchmarks**.
 3. **Resumen**: ganancia, ROAS sobre cash neto, techo y objetivo de tu unidad, semáforo, y las dos caras de cada número (costo y ganancia por visita, por lead, por cliente; order value bruto y neto).
-4. **Simulador**: la cadena completa editable en orden de embudo; cada supuesto con tu número al lado de la base, y cada resultado con tus números, el resultado base y la diferencia. Movés el CPM, el CTR, una conversión o un precio y ves cómo se mueve todo.
-5. **Embudo**: todos los pasos en orden con cantidad, % que pasa, % acumulado, lo que pagás hoy por cada uno (costo), lo que te queda por cada uno (ganancia) y lo máximo que podrías pagar (techo), con la fila de comprobación costo + ganancia + fijos repartidos = techo.
-6. **Escenarios**, **Sensibilidad**, **Proyección 12 meses** y **Seguimiento** (una columna por semana con tus datos reales y semáforo).
+4. **Embudo**: todos los pasos en orden con cantidad, % que pasa, % acumulado, lo que pagás hoy por cada uno (costo), lo que te queda por cada uno (ganancia) y lo máximo que podrías pagar (techo), con la fila de comprobación costo + ganancia + fijos repartidos = techo.
+5. **Escenarios**, **Sensibilidad**, **Proyección 12 meses** y **Seguimiento** (una columna por semana con tus datos reales y semáforo).
+
+## Simulación (`excel/simuladores/`)
+
+Un Excel aparte por embudo, separado a propósito para que no se mezcle con Supuestos: la hoja Modelo idéntica (etapa · valor · cómo se calcula), pero con todos los supuestos como números editables intercalados en su lugar de la cadena: inversión, CPM, CTR, visitas, conversión de la landing, asistencia, solicitudes, cierre, precios, comisiones, costos, cobranza y meta. Cambiás uno y se recalcula todo lo que depende. Sin vínculos con ningún otro archivo. La fila "Estado de tus números" avisa si un supuesto es imposible.
 
 ## Métricas diarias (`excel/metricas-diarias/`)
 

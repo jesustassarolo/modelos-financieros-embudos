@@ -216,6 +216,8 @@ def verificar(path):
 
 def verificar_simulador(path, v, wb):
     """Con los supuestos sin tocar, cada fila del Simulador tiene que dar lo mismo que el Modelo; y al cambiar un supuesto, cambiar."""
+    if "Simulador" not in wb.sheetnames:
+        return []
     ws = wb["Simulador"]; fallas = []; comparadas = 0; fila_in = None; fila_profit = None
     for r in range(5, ws.max_row + 1):
         e, f = ws.cell(r, 5).value, ws.cell(r, 6).value
@@ -254,11 +256,60 @@ def verificar_simulador(path, v, wb):
     return fallas
 
 
+def verificar_simulacion(sim_path, modelo_path):
+    """El Excel de simulación, con los valores del ejemplo, tiene que dar lo mismo que la hoja Modelo del modelo; reaccionar
+    al cambiar un supuesto; y marcar REVISAR si se escribe un porcentaje imposible."""
+    import tempfile
+    print(f"\n=== {os.path.basename(sim_path)}  (contra {os.path.basename(modelo_path)})")
+    wb_s = openpyxl.load_workbook(sim_path); ws = wb_s["Simulación"]; vs = calcular(sim_path)
+    wb_m = openpyxl.load_workbook(modelo_path); wm = wb_m["Modelo"]; vm = calcular(modelo_path)
+    fallas = []; n_f = 0
+    for hoja in wb_s.worksheets:
+        for row in hoja.iter_rows():
+            for c in row:
+                if isinstance(c.value, str) and c.value.startswith("="):
+                    n_f += 1; v = vs.get((hoja.title.upper(), c.coordinate))
+                    if v is None or es_error(v): fallas.append(f"{hoja.title}!{c.coordinate} → {v}")
+    modelo = {}
+    for r in range(5, wm.max_row + 1):
+        lab, f = wm.cell(r, 2).value, wm.cell(r, 3).value
+        if lab and isinstance(f, str) and f.startswith("="): modelo[lab] = vm.get(("MODELO", f"C{r}"))
+    comparadas = 0; fila_in = fila_pct = fila_profit = None
+    for r in range(6, ws.max_row + 1):
+        lab, c = ws.cell(r, 2).value, ws.cell(r, 3)
+        if isinstance(c.value, str) and c.value.startswith("=") and lab in modelo:
+            a, b = vs.get(("SIMULACIÓN", f"C{r}")), modelo[lab]; comparadas += 1
+            iguales = (abs(float(a) - float(b)) < 1e-6) if isinstance(a, (int, float)) and isinstance(b, (int, float)) else (str(a) == str(b))
+            if not iguales: fallas.append(f"fila {r} ({lab}): simulación {a} ≠ Modelo {b}")
+            if lab == "Ganancia del período": fila_profit = r
+        elif isinstance(c.value, (int, float)):
+            if fila_in is None: fila_in = r
+            if fila_pct is None and "%" in (c.number_format or ""): fila_pct = r
+    reacciona = detecta = None
+    if fila_in and fila_profit:
+        wb2 = openpyxl.load_workbook(sim_path); wb2["Simulación"].cell(fila_in, 3).value = float(wb2["Simulación"].cell(fila_in, 3).value) * 1.5
+        tmp = os.path.join(tempfile.gettempdir(), "simulacion_test.xlsx"); wb2.save(tmp); v2 = calcular(tmp)
+        reacciona = abs(float(vs.get(("SIMULACIÓN", f"C{fila_profit}"))) - float(v2.get(("SIMULACIÓN", f"C{fila_profit}")))) > 1e-6
+        if not reacciona: fallas.append("la simulación no reacciona al cambiar el primer supuesto")
+    if fila_pct:
+        wb3 = openpyxl.load_workbook(sim_path); wb3["Simulación"].cell(fila_pct, 3).value = 1.5
+        tmp3 = os.path.join(tempfile.gettempdir(), "simulacion_invalida.xlsx"); wb3.save(tmp3); v3 = calcular(tmp3)
+        detecta = str(v3.get(("SIMULACIÓN", "C4"))) == "REVISAR"
+        if not detecta: fallas.append(f"'Estado de tus números' no marca REVISAR con 150 % en la fila {fila_pct}")
+    print(f"  fórmulas: {n_f} · filas comparadas con Modelo: {comparadas} · diferencias: {sum(1 for f in fallas if '≠' in f)} · reacciona: {reacciona} · detecta inválido: {detecta}")
+    for f in fallas[:8]: print("   -", f)
+    return not fallas
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_IN
     ok = True
     for p in sorted(glob.glob(os.path.join(carpeta, "*.xlsx"))):
         ok = verificar(p) and ok
+    for sp in sorted(glob.glob(os.path.join(carpeta, "simuladores", "*.xlsx"))):
+        pref = os.path.basename(sp)[:3]
+        modelos = [m for m in glob.glob(os.path.join(carpeta, "*.xlsx")) if os.path.basename(m).startswith(pref)]
+        if modelos: ok = verificar_simulacion(sp, modelos[0]) and ok
     print("\nRESULTADO GENERAL:", "OK" if ok else "CON FALLAS")
     sys.exit(0 if ok else 1)
 
