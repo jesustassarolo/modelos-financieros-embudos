@@ -618,13 +618,8 @@ class Builder:
         self.wb._sheets = [self.wb[n] for n in order]
         self.wb.active = 0
         # marca de agua: propiedades del archivo y una línea al pie de Resumen
-        from mf_comun import MARCA, AUTOR, VERSION
-        self.wb.properties.creator = AUTOR
-        self.wb.properties.lastModifiedBy = AUTOR
-        self.wb.properties.title = self.s["titulo"]
-        self.wb.properties.subject = MARCA
-        self.wb.properties.description = MARCA + " · " + VERSION
-        self.wb.properties.keywords = "modelo financiero, embudo, TooAudience, " + AUTOR
+        from mf_comun import MARCA, AUTOR, VERSION, aplicar_marca
+        aplicar_marca(self.wb, self.s["titulo"], VERSION)
         ws = self.wb["Resumen"]
         r = ws.max_row + 2
         ws.cell(r, 2, MARCA + " · " + VERSION).font = FONT_NOTE

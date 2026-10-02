@@ -50,6 +50,8 @@ python3 generador/verificar.py    # recalcula todas las fórmulas sin Excel y co
 
 ## Licencia y atribución
 
+Cada archivo lleva la autoría por dentro y por fuera: en los Excel, en las propiedades del archivo (autor, asunto, palabras clave, propiedades personalizadas), en la fila 1 y en el encabezado y pie de impresión de cada hoja, y en una hoja `Licencia`; en el PDF, en los metadatos y como marca de agua y pie en todas las páginas. Se aplica con `generador/mf_comun.py` (`aplicar_marca`) y `generador/sellar_pdf.py`.
+
 Este material se publica bajo **Creative Commons BY-NC-ND 4.0**: podés descargarlo, usarlo con tus números y compartirlo tal cual, citando al autor; no podés venderlo, modificarlo ni redistribuir versiones modificadas. Cada Excel, la skill y el documento llevan la línea de autoría *Modelo financiero de embudos · creado por Jesús Tassarolo · TooAudience*. Dejala donde está: es la forma de saber de dónde salió.
 
 No contiene datos de clientes ni información sensible: los ejemplos son negocios ficticios calibrados con rangos de mercado.

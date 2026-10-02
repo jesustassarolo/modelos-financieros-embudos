@@ -444,7 +444,8 @@ class Libro:
 
     def build(self, out_dir):
         self.build_config(); self.build_diario(); self.build_semanal(); self.build_resumen(); self.build_inicio()
-        self.wb.properties.creator = "Jesús Tassarolo · TooAudience"; self.wb.properties.title = self.s["titulo"]; self.wb.properties.description = MARCA
+        from mf_comun import aplicar_marca
+        aplicar_marca(self.wb, self.s["titulo"], "Métricas diarias · " + VERSION)
         os.makedirs(out_dir, exist_ok=True); path = os.path.join(out_dir, self.s["archivo"]); self.wb.save(path); return path
 
 

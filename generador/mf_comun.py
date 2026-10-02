@@ -167,3 +167,54 @@ def seguimiento_calc(inv_key, unidades_key, fact_key, cash_key):
         {"key": "techo_r", "label": "Techo móvil (mediana de tus últimas 4 columnas; al inicio, el del modelo)", "tipo": "techo_movil", "src": "vpu_r", "fmt": "money"},
         {"key": "sem_r", "label": "Semáforo (costo por unidad contra el techo móvil, y ROAS contra el objetivo)", "tipo": "semaforo", "cpu": "cpu_r", "techo": "techo_r", "roas": "roas_r", "fmt": "txt", "bold": True},
     ]
+
+
+# ------------------------------------------------------------ marca de agua: metadatos, encabezados de impresión, fila 1 y hoja Licencia
+LICENCIA = ("Licencia Creative Commons BY-NC-ND 4.0: podés usar este archivo con tus números y compartirlo tal cual, citando al autor. "
+            "No podés venderlo, modificar su estructura para redistribuirlo ni quitar la línea de autoría.")
+
+
+def aplicar_marca(wb, titulo, descripcion_extra=""):
+    """Deja la autoría de Jesús Tassarolo en todo el libro: propiedades (autor, título, asunto, palabras clave, descripción),
+    propiedades personalizadas, nombre definido, encabezado y pie de impresión de cada hoja, una línea en la fila 1 de cada
+    hoja y una hoja Licencia al final. Google Sheets conserva la fila 1, la hoja Licencia y el título; Excel y Numbers,
+    además, los metadatos y los encabezados de impresión."""
+    from openpyxl.packaging.custom import StringProperty
+    from openpyxl.workbook.defined_name import DefinedName
+    from openpyxl.styles import Font
+    p = wb.properties
+    p.creator = AUTOR; p.lastModifiedBy = AUTOR; p.title = titulo
+    p.subject = "Modelo financiero de embudos · " + AUTOR + " · TooAudience"
+    p.description = MARCA + " · " + LICENCIA + (" · " + descripcion_extra if descripcion_extra else "")
+    p.keywords = AUTOR + ", TooAudience, modelo financiero, embudos, mastermind" + ((", Instagram " + MARCA_INSTAGRAM) if MARCA_INSTAGRAM else "")
+    p.category = "TooAudience · Mastermind"
+    for nombre, valor in [("Autor", AUTOR), ("Marca", MARCA), ("Licencia", "CC BY-NC-ND 4.0"), ("YouTube", MARCA_YOUTUBE), ("Version", VERSION)] + ([("Instagram", MARCA_INSTAGRAM)] if MARCA_INSTAGRAM else []):
+        try:
+            wb.custom_doc_props.append(StringProperty(name=nombre, value=valor))
+        except Exception:
+            pass
+    try:
+        wb.defined_names["Autor_Jesus_Tassarolo"] = DefinedName("Autor_Jesus_Tassarolo", attr_text='"' + MARCA.replace('"', "'") + '"')
+    except Exception:
+        pass
+    nota = Font(italic=True, color="8C8C8C", size=8)
+    for ws in wb.worksheets:
+        if ws.title == "Licencia":
+            continue
+        ws.oddHeader.center.text = AUTOR + " · TooAudience"
+        ws.oddHeader.right.text = "&D"
+        ws.oddFooter.left.text = MARCA[:250]
+        ws.oddFooter.right.text = "Página &P de &N"
+        ws.evenHeader.center.text = AUTOR + " · TooAudience"; ws.evenFooter.left.text = MARCA[:250]; ws.evenFooter.right.text = "Página &P de &N"
+        c = 2 if (ws.cell(2, 2).value is not None and ws.cell(2, 1).value is None) else 1
+        if ws.cell(1, c).value is None:
+            ws.cell(1, c, "© " + AUTOR + " · TooAudience · " + MARCA_YOUTUBE + " · uso personal; no redistribuir modificado").font = nota
+    if "Licencia" not in wb.sheetnames:
+        ws = wb.create_sheet("Licencia"); ws.column_dimensions["A"].width = 3; ws.column_dimensions["B"].width = 120
+        ws.cell(2, 2, "Autoría y licencia").font = Font(bold=True, size=14)
+        for i, t in enumerate([titulo, MARCA, VERSION, "", LICENCIA, "",
+                               "Este archivo, sus fórmulas, sus umbrales y su método son obra de " + AUTOR + " (TooAudience). Si lo compartís, compartilo entero y con esta hoja.",
+                               "Canal: " + MARCA_YOUTUBE + ((" · Instagram " + MARCA_INSTAGRAM) if MARCA_INSTAGRAM else "")]):
+            ws.cell(4 + i, 2, t).alignment = __import__("openpyxl").styles.Alignment(wrap_text=True, vertical="top")
+        ws.sheet_properties.tabColor = "1F3864"
+    return wb
