@@ -185,23 +185,22 @@ def ejemplo(e, dias):
         if i >= 28: filas.append({}); continue
         d = {}; dow = i % 7
         if e == "low_ticket":
-            inv = n(300); imp = inv / n(4.2) * 1000; alc = imp / n(1.6); clk = imp * n(0.021); vis = clk * n(0.90)
+            inv = n(300); imp = inv / n(4.2) * 1000; alc = imp / n(1.6); clk = imp * n(0.0155); vis = clk * n(0.90)
             ck = vis * n(0.035); v = ck * n(0.26)
             d.update(inversion=round(inv), impresiones=ri(imp), alcance=ri(alc), clics_enlace=ri(clk), visitas=ri(vis), checkouts=ri(ck), ventas_front=ri(v),
                      bump1=ri(v * 0.25), bump2=ri(v * 0.18), oto1=ri(v * 0.10), oto2=ri(v * 0.06), oto3=ri(v * 0.03), oto4=ri(v * 0.04), ascension=ri(v * 0.02))
         elif e == "webinar_gratuito":
             inv = n(857); imp = inv / n(4.5) * 1000; alc = imp / n(1.5); clk = imp * n(0.022); vis = clk * n(0.90); reg = vis * n(0.23)
             d.update(inversion=round(inv), impresiones=ri(imp), alcance=ri(alc), clics_enlace=ri(clk), visitas=ri(vis), registros=ri(reg), registros_calif=ri(reg * 0.60), grupo=ri(reg * 0.67))
-            sem_reg = 857 / n(0.99) * 7 * 0.6  # registros de la semana que llegan al jueves
+            sem_reg = 6000 * n(1.0, 0.06)  # registros de la semana (el webinar es el jueves)
             if dow == 3:
-                av = sem_reg * n(0.15, 0.08); d.update(en_vivo=ri(av), replay=ri(sem_reg * 0.20), solicitudes=ri(av * 0.10), ventas_front=ri(av * 0.10 * 0.40 * 0.8))
+                av = sem_reg * n(0.15, 0.08); so = av * n(0.10, 0.1); d.update(en_vivo=ri(av), replay=ri(sem_reg * 0.20), solicitudes=ri(so), ventas_front=ri(so * 0.40))
             elif dow == 4:
-                d.update(replay=ri(sem_reg * 0.25), solicitudes=ri(sem_reg * 0.25 * 0.025 + 3), ventas_front=ri(4))
+                so = sem_reg * 0.25 * n(0.06, 0.15); d.update(replay=ri(sem_reg * 0.25), solicitudes=ri(so), ventas_front=ri(so * 0.40))
             elif dow == 5:
-                d.update(replay=ri(sem_reg * 0.10), solicitudes=ri(2), ventas_front=ri(3))
-            else:
-                d.update(en_vivo=0, replay=0, solicitudes=0, ventas_front=0)
-            vf = d.get("ventas_front", 0); d.update(bump=ri(vf * 0.20), backend=ri(vf * 0.05) if dow in (4, 5) else 0)
+                so = sem_reg * 0.10 * n(0.055, 0.15); d.update(replay=ri(sem_reg * 0.10), solicitudes=ri(so), ventas_front=ri(so * 0.40))
+            vf = d.get("ventas_front")
+            if vf is not None: d.update(bump=ri(vf * 0.20), backend=(ri(vf * 0.05) if dow in (4, 5) else 0))
         elif e == "llamada":
             inv = n(150); imp = inv / n(10) * 1000; alc = imp / n(1.4); clk = imp * n(0.015); vis = clk * n(0.85); ld = vis * n(0.28)
             ap = ld * n(0.10, 0.3); ca = ap * 0.6; ag = ca * 0.6; ll = ag * 0.7
@@ -211,13 +210,11 @@ def ejemplo(e, dias):
         else:
             inv = n(430); imp = inv / n(5) * 1000; alc = imp / n(1.5); clk = imp * n(0.02); vis = clk * n(0.88); en = vis * n(0.025)
             d.update(inversion=round(inv), impresiones=ri(imp), alcance=ri(alc), clics_enlace=ri(clk), visitas=ri(vis), entradas=ri(en), bump_entrada=ri(en * 0.20), grupo=ri(en * 0.85))
-            sem_en = 214 * 0.6
+            sem_en = 214 * n(1.0, 0.06)
             if dow == 3:
-                av = sem_en * n(0.55, 0.08); d.update(en_vivo=ri(av), replay=ri(sem_en * 0.10), solicitudes=ri(av * 0.16), ventas_front=ri(av * 0.16 * 0.5 * 0.8), backend=1)
+                av = sem_en * n(0.55, 0.08); so = av * n(0.16, 0.1); d.update(en_vivo=ri(av), replay=ri(sem_en * 0.10), solicitudes=ri(so), ventas_front=ri(so * 0.5), backend=1)
             elif dow == 4:
-                d.update(replay=ri(sem_en * 0.15), solicitudes=ri(2), ventas_front=ri(2), backend=0)
-            else:
-                d.update(en_vivo=0, replay=0, solicitudes=0, ventas_front=0, backend=0)
+                d.update(replay=ri(sem_en * 0.15), solicitudes=ri(2), ventas_front=ri(1), backend=0)
         filas.append(d)
     return filas
 
