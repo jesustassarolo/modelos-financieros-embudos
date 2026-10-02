@@ -171,6 +171,7 @@ def verificar(path):
     v2 = calcular(tmp)
     est2 = v2.get(("CHEQUEOS", f"C{est_row}"))
     n_err = sum(1 for k, v in v2.items() if k[0] in ("MODELO", "RESUMEN") and es_error(v))
+    fallas += verificar_simulador(path, vals, wb)
     print(f"  caso borde (tráfico en 0): estado general {est2}, celdas con error en Modelo/Resumen {n_err}")
     if str(est2) != "REVISAR":
         fallas.append(f"caso borde: Chequeos dice {est2} con un supuesto de tráfico en 0")
@@ -211,6 +212,32 @@ def verificar(path):
     else:
         print("  TODO OK")
     return not fallas
+
+
+def verificar_simulador(path, v, wb):
+    """Con los supuestos sin tocar, cada fila del Simulador tiene que dar lo mismo que el Modelo; y al cambiar un supuesto, cambiar."""
+    ws = wb["Simulador"]; fallas = []; comparadas = 0; fila_in = None; fila_profit = None
+    for r in range(5, ws.max_row + 1):
+        e, f = ws.cell(r, 5).value, ws.cell(r, 6).value
+        if isinstance(e, str) and e.startswith("=") and isinstance(f, str) and f.startswith("="):
+            ve, vf = v.get(("SIMULADOR", f"E{r}")), v.get(("SIMULADOR", f"F{r}")); comparadas += 1
+            iguales = (abs(float(ve) - float(vf)) < 1e-6) if isinstance(ve, (int, float)) and isinstance(vf, (int, float)) else (str(ve) == str(vf))
+            if not iguales: fallas.append(f"Simulador fila {r} ({ws.cell(r, 2).value}): {ve} ≠ Modelo {vf}")
+            if ws.cell(r, 2).value == "Ganancia del período": fila_profit = r
+        c = ws.cell(r, 3).value
+        if fila_in is None and isinstance(c, str) and c.startswith("='Supuestos'"):
+            fila_in = r   # la primera celda amarilla del Simulador (la inversión o el CPM)
+    cambia = None
+    if fila_in and fila_profit:
+        import tempfile
+        wb2 = openpyxl.load_workbook(path); ws2 = wb2["Simulador"]
+        base = v.get(("SIMULADOR", f"D{fila_in}")); ws2.cell(fila_in, 3).value = float(base) * 1.5
+        tmp = os.path.join(tempfile.gettempdir(), "sim_test.xlsx"); wb2.save(tmp); v2 = calcular(tmp)
+        antes, despues = v.get(("SIMULADOR", f"E{fila_profit}")), v2.get(("SIMULADOR", f"E{fila_profit}"))
+        cambia = abs(float(antes) - float(despues)) > 1e-6
+        if not cambia: fallas.append(f"el Simulador no reacciona al cambiar el primer supuesto (ganancia {antes} → {despues})")
+    print(f"  Simulador: {comparadas} filas comparadas con Modelo, {len(fallas)} diferencias; reacciona al cambiar el primer supuesto: {cambia}")
+    return fallas
 
 
 def main():

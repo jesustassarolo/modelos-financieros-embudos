@@ -23,17 +23,18 @@ def inicio(nombre, que_es, ejemplo, unidad_s, unidad_p, periodo, reglas_extra=()
             f"Es el modelo financiero de un {nombre}. Con tus números (o con el ejemplo cargado) te dice cuánto vale cada {unidad_s} que comprás con publicidad, hasta cuánto podés pagar por {unidad_s} y por cada etapa siguiente, cuánto invertir para una meta de ventas, cuánta caja necesitás y qué palanca mejora más la ganancia.",
             *que_es,
         ]),
-        ("Cómo usarlo en 6 pasos", [
+        ("Cómo usarlo en 7 pasos", [
             "1. Andá a Supuestos y reemplazá el ejemplo por tus números. Si todavía no tenés datos, dejá el escenario en 1 (conservador) y usá Benchmarks como referencia.",
-            f"2. Mirá Resumen: ganancia del {periodo}, ROAS, el techo y el objetivo de costo por {unidad_s}, y el semáforo. Después Embudo: todos los pasos en orden con cuántos pasan, qué porcentaje se pierde y cuánto cuesta cada paso.",
-            "3. Abrí Escenarios para ver qué pasa si cambia el precio, la conversión o el costo. Las celdas amarillas de cada tabla se pueden cambiar.",
-            "4. Abrí Sensibilidad para saber qué variable conviene trabajar primero.",
+            f"2. Mirá Resumen: ganancia del {periodo}, ROAS, el techo y el objetivo de costo por {unidad_s}, y el semáforo. Después Embudo: todos los pasos en orden con cuántos pasan, lo que pagás, lo que te queda y lo máximo que podrías pagar por cada uno.",
+            "3. Abrí Simulador para jugar: cada supuesto está en orden de embudo (inversión, CPM, CTR, visitas, conversión de la landing, asistencia, solicitudes, cierre, precios, costos) con tu número en amarillo al lado de la base. Cambiá uno y mirá cómo se mueven todos los demás contra la base; la columna Diferencia te dice cuánto. No toca Supuestos.",
+            "4. Abrí Escenarios para ver qué pasa si cambia el precio, la conversión o el costo en tablas de dos variables, y Sensibilidad para saber qué variable conviene trabajar primero.",
             "5. Antes de invertir, mirá Proyección 12 meses: la caja necesaria es la plata que tenés que tener para no frenar la pauta mientras cobrás. Si da 0, el embudo se autofinancia.",
             f"6. Cuando el embudo esté andando, completá una columna de Seguimiento por {periodo}. El semáforo te dice si estás pagando de más por cada {unidad_s}.",
+            "7. Una decisión por semana, anotada. A los 7 días, mirá qué pasó.",
         ]),
         ("Colores y hojas", [
             "Amarillo = celda que editás vos. Azul = resultado calculado: no lo toques, se recalcula solo.",
-            "Resumen, Embudo y Modelo leen de Supuestos. Escenarios y Sensibilidad recalculan el modelo entero cambiando una o dos variables. Proyección usa los mismos supuestos mes a mes. Seguimiento es la única hoja, además de Supuestos, donde cargás datos.",
+            "Resumen, Embudo y Modelo leen de Supuestos. Simulador es la mesa de pruebas: copia Supuestos en orden de embudo y vos escribís encima. Escenarios y Sensibilidad recalculan el modelo entero cambiando una o dos variables. Proyección usa los mismos supuestos mes a mes. Seguimiento es la única hoja, además de Supuestos, donde cargás datos.",
             "Chequeos avisa si un supuesto quedó fuera de rango. Si dice REVISAR, arreglalo antes de leer los resultados.",
             "Cómo elegir escenario: en Supuestos, la celda 'Escenario en uso' (1, 2 o 3) elige la columna conservador, base u optimista de cada fila que tiene tres valores. Las filas con un solo valor se usan tal cual.",
         ]),

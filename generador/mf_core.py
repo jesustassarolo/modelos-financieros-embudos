@@ -252,6 +252,73 @@ class Builder:
         ws.freeze_panes = "C5"
         return ws
 
+    def build_simulador(self):
+        """La hoja Modelo, pero editable en orden de embudo: cada supuesto aparece justo antes del primer paso que lo usa,
+        con tu número (amarillo) al lado de la base; cada resultado se calcula con tus números y se compara con el Modelo."""
+        ws = self.sheet("Simulador", [2, 56, 17, 17, 19, 19, 15, 62])
+        r = self.title(ws, 2, "Simulador: movés un número y ves cómo se mueve todo el embudo",
+                       "Amarillo = tu número: arranca igual a Supuestos; escribí encima para probar (CPM, CTR, conversiones, precios, costos). "
+                       "Al lado, la base. 'Con tus números' se recalcula al instante y se compara con el Modelo. Para volver a la base, "
+                       "borrá la celda amarilla y escribí =D seguido del número de fila (por ejemplo =D9).")
+        r = self.header(ws, r, ["Paso / métrica", "Tu número (editable)", "Base (Supuestos)", "Con tus números", "Base (Modelo)", "Diferencia", "Cómo se calcula"])
+        first = r
+        sim = {}        # clave -> celda del simulador (supuestos: columna C; cálculos: columna E)
+        filas_in = []   # filas de supuestos
+        sem_rows = []
+
+        def fila_supuesto(dep, r):
+            self.put(ws, r, 2, self.label.get(dep, dep))
+            self.put(ws, r, 3, "=" + self.ref[dep], self.fmt.get(dep), "in")
+            self.put(ws, r, 4, "=" + self.ref[dep], self.fmt.get(dep), "out")
+            self.put(ws, r, 7, f'=IF(C{r}<>D{r},"← cambiado","")')
+            self.put(ws, r, 8, "Supuesto. Escribí encima para probar; la base queda al lado.", wrap=True)
+            sim[dep] = f"$C${r}"; filas_in.append(r)
+
+        for it in self.s["calculo"]:
+            if "seccion" in it:
+                r = self.section(ws, r, it["seccion"], ncols=7)
+                continue
+            k = it["key"]; tpl = self.tpl[k]
+            for dep in KEY_RE.findall(tpl):
+                if dep in self.base and dep not in sim and dep != "escenario":
+                    fila_supuesto(dep, r); r += 1
+            faltan = [d for d in KEY_RE.findall(tpl) if d not in sim]
+            if faltan:
+                raise KeyError(f"Simulador: {k} usa {faltan} antes de definirse")
+            self.put(ws, r, 2, it["label"], bold=it.get("bold", False))
+            self.put(ws, r, 5, self.formula(tpl, overrides=sim), it["fmt"], "out", bold=it.get("bold", False))
+            self.put(ws, r, 6, "=" + self.ref[k], it["fmt"], "out")
+            if it["fmt"] == "txt":
+                self.put(ws, r, 7, f'=IF(E{r}=F{r},"","≠ base")'); sem_rows.append(r)
+            else:
+                self.put(ws, r, 7, f'=IF(AND(ISNUMBER(E{r}),ISNUMBER(F{r})),E{r}-F{r},"")', it["fmt"], "out")
+            self.put(ws, r, 8, it.get("como", ""), wrap=True)
+            sim[k] = f"$E${r}"; r += 1
+        # ganancia por paso, con los números del simulador
+        r = self.section(ws, r, "Ganancia por paso (las dos caras de cada número)", ncols=7)
+        self.put(ws, r, 2, "Cash neto por comprador (AOV neto)", bold=True)
+        self.put(ws, r, 5, f"=IF({sim['ventas_front']}=0,0,({sim['neto']}-{sim['semivar']})/{sim['ventas_front']})", "money", "out", bold=True)
+        self.put(ws, r, 6, "=" + self.ref["aov_neto"], "money", "out"); self.put(ws, r, 7, f'=IF(AND(ISNUMBER(E{r}),ISNUMBER(F{r})),E{r}-F{r},"")', "money", "out")
+        self.put(ws, r, 8, "Lo que deja cada comprador después de comisiones, reembolsos y costos por unidad. Su par es el CPA.", wrap=True); r += 1
+        for g in self.s.get("ganancia", []):
+            k, nombre = g["key"], g["nombre"]
+            self.put(ws, r, 2, f"Ganancia por {nombre}", bold=g.get("bold", False))
+            self.put(ws, r, 5, f"=IF({sim[k]}=0,0,{sim['profit']}/{sim[k]})", "money", "out", bold=g.get("bold", False))
+            self.put(ws, r, 6, "=" + self.ref[f"gan_{k}"], "money", "out"); self.put(ws, r, 7, f'=IF(AND(ISNUMBER(E{r}),ISNUMBER(F{r})),E{r}-F{r},"")', "money", "out")
+            self.put(ws, r, 8, g.get("como", f"Ganancia del período ÷ {nombre}s. Su par es el costo por {nombre}."), wrap=True); r += 1
+        last = r - 1
+        # formatos condicionales: supuesto cambiado en naranja; semáforos con color
+        ws.conditional_formatting.add(f"C{first}:C{last}", FormulaRule(formula=[f"AND(ISNUMBER(C{first}),C{first}<>D{first})"], fill=PatternFill("solid", fgColor="F8CBAD")))
+        for rr in sem_rows:
+            self.semaforo_cf(ws, f"E{rr}:F{rr}")
+        r += 1
+        for linea in ["Cómo se lee: cambiá una celda amarilla (por ejemplo el CPM, el CTR, la conversión de la landing, el show, el cierre o el precio) y mirá cómo se mueven la cantidad de cada paso, el costo por paso, el facturado, el cash neto, la ganancia, el ROAS, el techo y el semáforo.",
+                      "Una variable por vez: si cambiás tres cosas no sabés cuál movió el resultado. La columna Diferencia te muestra exactamente cuánto cambió cada número contra la base.",
+                      "El Simulador no modifica Supuestos ni Modelo: es tu mesa de pruebas. Cuando una prueba te convence, pasá ese número a Supuestos."]:
+            c = ws.cell(r, 2, linea); c.alignment = WRAP; ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=8); ws.row_dimensions[r].height = 30; r += 1
+        ws.freeze_panes = "C5"
+        return ws
+
     def build_embudo(self):
         """El embudo como tabla: cada paso con cantidad, % que pasa, % acumulado, costo, ganancia y techo por paso."""
         ws = self.sheet("Embudo", [2, 46, 13, 13, 13, 15, 15, 15, 50])
@@ -581,7 +648,7 @@ class Builder:
         r = self.title(ws, 2, "Chequeos: el modelo se revisa solo", "Si alguna fila dice REVISAR, hay un supuesto fuera de rango o un dato inconsistente.")
         r = self.header(ws, r, ["Chequeo", "Estado", "Qué revisar"])
         first = r
-        for hoja, rng in [("Modelo", "C5:C160"), ("Embudo", "C5:H60"), ("Resumen", "C5:C60"), ("Proyección 12 meses", "C5:O40"), ("Escenarios", "C5:L120"), ("Seguimiento", "C5:Q80")]:
+        for hoja, rng in [("Modelo", "C5:C160"), ("Simulador", "C5:G220"), ("Embudo", "C5:H60"), ("Resumen", "C5:C60"), ("Proyección 12 meses", "C5:O40"), ("Escenarios", "C5:L120"), ("Seguimiento", "C5:Q80")]:
             self.put(ws, r, 2, f"Ninguna celda con error en {hoja}")
             self.put(ws, r, 3, f"=IF(ISERROR(SUM('{hoja}'!{rng})),\"REVISAR\",\"OK\")", None, "out")
             self.put(ws, r, 4, "Si dice REVISAR, hay un #DIV/0! o #REF!: casi siempre un supuesto en 0 o una fila borrada.", wrap=True)
@@ -604,6 +671,7 @@ class Builder:
         self.build_inicio()
         self.build_supuestos()
         self.build_modelo()
+        self.build_simulador()
         self.build_embudo()
         self.build_proyeccion()
         self.build_resumen()
@@ -613,7 +681,7 @@ class Builder:
         self.build_benchmarks()
         self.build_glosario()
         self.build_chequeos()
-        order = ["Inicio", "Resumen", "Embudo", "Supuestos", "Modelo", "Escenarios", "Sensibilidad",
+        order = ["Inicio", "Resumen", "Simulador", "Embudo", "Supuestos", "Modelo", "Escenarios", "Sensibilidad",
                  "Proyección 12 meses", "Seguimiento", "Benchmarks", "Glosario", "Chequeos"]
         self.wb._sheets = [self.wb[n] for n in order]
         self.wb.active = 0

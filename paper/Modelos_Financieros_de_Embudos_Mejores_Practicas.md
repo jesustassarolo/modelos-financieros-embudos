@@ -477,14 +477,15 @@ Hay un Excel por embudo, y los cuatro tienen las mismas hojas. Este documento ex
 
 1. **Inicio.** El instructivo de la planilla, en seis pasos, con las reglas de decisión resumidas. Leela una vez.
 2. **Supuestos.** Reemplazá el ejemplo por tus números. Si no tenés datos, elegí el escenario 1 (conservador) y usá los benchmarks del capítulo 4. Cada fila tiene una nota que dice de dónde sale el valor del ejemplo; escribí al lado de dónde sale el tuyo y con qué fecha.
-3. **Modelo.** La cadena completa calculada: tráfico, unidades, etapas, ventas por producto, facturado, cash neto, ganancia, los techos de cada paso y la ganancia por paso. Es el capítulo 2 hecho fórmulas.
-4. **Embudo.** Todos los pasos en orden con cantidad, porcentaje que pasa, porcentaje acumulado, lo que pagás hoy por cada uno, lo que te queda por cada uno y lo máximo que podrías pagar. Al final, la fila de comprobación: costo más ganancia más fijos repartidos da el techo. Son las tablas del capítulo 3.
-5. **Resumen.** Ganancia del período, ROAS sobre cash neto, el techo y el objetivo de tu unidad, el semáforo, las dos caras de cada número (costo y ganancia por visita, por lead, por cliente) y el order value bruto y neto. Es lo que miro primero.
-6. **Escenarios.** Precio por cierre, costo por unidad por conversión, cuánto invertir para una facturación objetivo y el guardarraíl de ROAS mínimo por nivel de inversión. Capítulos 7 y 8.
-7. **Sensibilidad.** El ranking de palancas: qué mover primero. Capítulo 8.
-8. **Proyección 12 meses.** Lanzamientos por mes, crecimiento mensual, curva de cobranza, ganancia de caja mes a mes y la caja necesaria. Capítulo 9.
-9. **Seguimiento.** Una columna por semana o por lanzamiento con tus datos reales. Calcula el valor por unidad real, el techo móvil (mediana de tus últimas cuatro columnas), el semáforo y el ROAS sobre cash neto y sobre cash cobrado. Es la rutina del capítulo 10.
-10. **Benchmarks, Glosario y Chequeos.** Los rangos de referencia, las definiciones y una hoja que avisa si algún supuesto no cierra (porcentajes fuera de rango, cobranza que no suma 100 %, divisiones por cero).
+3. **Simulador.** La hoja Modelo pero editable, en orden de embudo: cada supuesto (inversión, CPM, CTR, visitas, conversión de la landing, asistencia, solicitudes, cierre, precios, costos) con tu número en amarillo al lado de la base. Cambiás uno y ves al instante cómo se mueven la cantidad de cada paso, los costos, el facturado, el cash neto, la ganancia, el ROAS y el techo, con la diferencia contra la base. Es tu mesa de pruebas: no toca Supuestos.
+4. **Modelo.** La cadena completa calculada: tráfico, unidades, etapas, ventas por producto, facturado, cash neto, ganancia, los techos de cada paso y la ganancia por paso. Es el capítulo 2 hecho fórmulas.
+5. **Embudo.** Todos los pasos en orden con cantidad, porcentaje que pasa, porcentaje acumulado, lo que pagás hoy por cada uno, lo que te queda por cada uno y lo máximo que podrías pagar. Al final, la fila de comprobación: costo más ganancia más fijos repartidos da el techo. Son las tablas del capítulo 3.
+6. **Resumen.** Ganancia del período, ROAS sobre cash neto, el techo y el objetivo de tu unidad, el semáforo, las dos caras de cada número (costo y ganancia por visita, por lead, por cliente) y el order value bruto y neto. Es lo que miro primero.
+7. **Escenarios.** Precio por cierre, costo por unidad por conversión, cuánto invertir para una facturación objetivo y el guardarraíl de ROAS mínimo por nivel de inversión. Capítulos 7 y 8.
+8. **Sensibilidad.** El ranking de palancas: qué mover primero. Capítulo 8.
+9. **Proyección 12 meses.** Lanzamientos por mes, crecimiento mensual, curva de cobranza, ganancia de caja mes a mes y la caja necesaria. Capítulo 9.
+10. **Seguimiento.** Una columna por semana o por lanzamiento con tus datos reales. Calcula el valor por unidad real, el techo móvil (mediana de tus últimas cuatro columnas), el semáforo y el ROAS sobre cash neto y sobre cash cobrado. Es la rutina del capítulo 10.
+11. **Benchmarks, Glosario y Chequeos.** Los rangos de referencia, las definiciones y una hoja que avisa si algún supuesto no cierra (porcentajes fuera de rango, cobranza que no suma 100 %, divisiones por cero).
 
 Una sugerencia para que esto funcione de verdad: la primera vez, cargá Seguimiento con tus últimas cuatro semanas reales, aunque los números te den vergüenza. Ese es el histórico que te falta, y desde ahí todo lo demás empieza a tener sentido. La segunda vez, el lunes que viene, con la semana cerrada. La tercera, ya es rutina.
 
