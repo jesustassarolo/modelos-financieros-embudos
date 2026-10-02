@@ -9,6 +9,8 @@ Uso:
   python3 calculadora.py --embudo low_ticket --json mis_datos.json --html grafico.html
   python3 calculadora.py --embudo webinar_pago --supuestos               # lista los supuestos que acepta
   python3 calculadora.py --embudo webinar_gratuito --testeo anuncios_nuevos=12 pct_testeo=0.10 dias_ganador=20 frecuencia=2.1
+  python3 calculadora.py --embudo webinar_gratuito --set cpm=5.2 --historico cpu=0.95 gan_visita=0.48 show_vivo=0.16 roas=3.1   # umbrales = tus promedios
+  python3 calculadora.py --embudo llamada --periodos ultimas_semanas.json      # mediana de tus períodos como histórico
 Salida: el bloque de respuesta (valor por unidad, techo, objetivo, costo / ganancia / techo por paso, la radiografía de lo que
 más importa con semáforo y UNA decisión, inversión para la meta, palanca que más mueve) y, con --html, un gráfico con marca de agua.
 """
@@ -130,54 +132,96 @@ ACCION = {
 }
 PEOR = {"ROJO": 0, "AMARILLO": 1, "VERDE": 2, "SIN DATOS": 3}
 
+DIRECCION = {"cpu": "menor", "cpm": "menor", "costo_visita": "menor", "frecuencia": "menor", "reembolsos": "menor"}  # el resto: mayor es mejor
+REF_CPM = {"visita": "bueno 3 a 8 % del CPM, es decir 12 a 30 visitas por cada 1.000 impresiones",
+           "registro": "bueno 25 a 40 % del CPM (2,5 a 4 registros por cada 1.000 impresiones), aceptable hasta 67 %; con CPM de 3 un CPL de 1 y con CPM de 25 un CPL de 10 son el mismo embudo",
+           "lead": "bueno 25 a 40 % del CPM (2,5 a 4 leads por cada 1.000 impresiones), aceptable hasta 67 %; con CPM de 3 un CPL de 1 y con CPM de 25 un CPL de 10 son el mismo embudo",
+           "entrada": "normal entre 1 y 4 veces el CPM (0,25 a 1 entrada por cada 1.000 impresiones); lo que decide es el ROAS del front"}
+MERCADO = {"low_ticket": "visita → checkout 2 a 5 %", "webinar_gratuito": "visita → registro 15 a 30 %", "llamada": "visita → lead 15 a 30 %", "webinar_pago": "visita → entrada 1 a 3,5 %"}
+
+def sem_rel(v, prom, direccion="mayor", tol=0.25):
+    """Semáforo contra el promedio propio: verde = igual o mejor; amarillo = hasta `tol` peor; rojo = más que `tol` peor."""
+    if prom is None or prom == 0: return None
+    if direccion == "menor":
+        return "VERDE" if v <= prom else ("AMARILLO" if v <= prom * (1 + tol) else "ROJO")
+    return "VERDE" if v >= prom else ("AMARILLO" if v >= prom * (1 - tol) else "ROJO")
+
 def sem_mayor(v, t1, t2): return "ROJO" if v < t1 else ("AMARILLO" if v < t2 else "VERDE")
 
-def radiografia(e, s, m, testeo=None):
-    """Lo que más importa, en orden, con semáforo. Devuelve (filas, decisión). Cada fila: (n, nombre, lectura, semáforo)."""
-    I = s["inversion"]; filas = []
+def _contra(v, k, hist, tol, fmt, direccion=None):
+    """Compara v con el promedio propio de la clave k. Devuelve (semáforo o None, texto)."""
+    prom = (hist or {}).get(k)
+    if prom is None: return None, "sin histórico"
+    sem = sem_rel(v, prom, direccion or DIRECCION.get(k, "mayor"), tol)
+    dif = d(v - prom, prom)
+    return sem, f"tu promedio {fmt(prom)} ({'+' if dif >= 0 else ''}{dif*100:.0f} %)".replace(".", ",")
+
+def radiografia(e, s, m, testeo=None, hist=None, tol=0.25):
+    """Lo que más importa, en orden, con semáforo CONTRA EL PROMEDIO PROPIO del usuario (hist). Sin histórico, la fila
+    queda SIN HISTÓRICO y muestra el rango de mercado solo como referencia. Las únicas reglas fijas son matemáticas:
+    ganancia negativa, costo por encima del techo (que sale de los números del usuario) y ROAS de caja por debajo de 1."""
+    hist = hist or {}; I = s["inversion"]; filas = []
     vis = next((q for n, q, *_ in m["etapas"] if n.startswith("Visitas")), m["unidades"])
-    gpv, cpv = d(m["profit"], vis), d(I, vis); margen = d(gpv, cpv)
-    sem = "ROJO" if gpv <= 0 or margen < 0.3 else ("AMARILLO" if margen < 1.0 else "VERDE")
-    filas.append((1, "Ganancia por visita", f"{money(gpv)} por visita contra {money(cpv)} de costo por visita (margen {ratio(margen)}; verde desde 1,0x)", sem))
-    sem = "ROJO" if m["cpu"] > m["techo"] else ("AMARILLO" if m["cpu"] > m["objetivo"] else "VERDE")
-    filas.append((2, f"Costo por {m['unidad']}", f"{money(m['cpu'])} contra objetivo {money(m['objetivo'])} y techo {money(m['techo'])}", sem))
+    gpv, cpv = d(m["profit"], vis), d(I, vis)
+    sem, txt = _contra(gpv, "gan_visita", hist, tol, money)
+    if gpv <= 0: sem, txt = "ROJO", "perdés plata por cada visita"
+    filas.append((1, "Ganancia por visita", f"{money(gpv)} por visita (costo por visita {money(cpv)}); {txt}", sem or "SIN HISTÓRICO"))
+    sem_t = "ROJO" if m["cpu"] > m["techo"] else ("AMARILLO" if m["cpu"] > m["objetivo"] else "VERDE")
+    sem_h, txt = _contra(m["cpu"], "cpu", hist, tol, money)
+    sem = min([x for x in (sem_t, sem_h) if x], key=lambda x: PEOR[x])
+    cpm = s.get("cpm") or hist.get("cpm")
+    if cpm:
+        por_mil = d(cpm, m["cpu"]); razon = d(m["cpu"], cpm)
+        ref = REF_CPM.get(m["unidad"], "")
+        txt_cpm = (f"; en tu nicho: {money(m['cpu'])} es el {razon*100:.0f} % de tu CPM de {money(cpm)}, {por_mil:.1f} {m['unidad']}s por cada 1.000 impresiones"
+                   + (f" (práctica: {ref})" if ref else ""))
+        txt_cpm = txt_cpm.replace(f"{por_mil:.1f}", f"{por_mil:.1f}".replace(".", ","))
+    else:
+        txt_cpm = "; pasá tu CPM (--historico cpm=…) para leer el costo en relación a tu nicho: el umbral de costo depende del CPM"
+    filas.append((2, f"Costo por {m['unidad']}", f"{money(m['cpu'])} contra tu techo {money(m['techo'])} y tu objetivo {money(m['objetivo'])}; {txt}{txt_cpm}", sem))
     k, lab, t1, t2 = LANDING[e]; v = s[k]
-    filas.append((3, "Conversión de la landing", f"{lab} {pct(v)} (amarillo desde {pct(t1)}, verde desde {pct(t2)})", sem_mayor(v, t1, t2)))
+    sem, txt = _contra(v, k, hist, tol, pct)
+    filas.append((3, "Conversión de la landing", f"{lab} {pct(v)}; {txt}" + ("" if sem else f" (sin histórico; punto de partida de mercado: {MERCADO[e]})"), sem or "SIN HISTÓRICO"))
     if testeo:
         an = testeo.get("anuncios_nuevos"); pt = testeo.get("pct_testeo"); dg = testeo.get("dias_ganador"); fr = testeo.get("frecuencia")
         avisos, sems = [], []
         if an is not None:
+            sh, th = _contra(an, "anuncios_nuevos", hist, tol, lambda x: f"{x:.0f}")
             if an == 0: avisos.append("0 anuncios nuevos en 7 días"); sems.append("ROJO" if filas[1][3] != "VERDE" else "AMARILLO")
-            elif an < 10: avisos.append(f"{an:.0f} anuncios nuevos por semana (escalando hacen falta 20 a 50)"); sems.append("AMARILLO")
-            else: sems.append("VERDE")
-        if pt is not None:
-            if pt < 0.05: avisos.append(f"testeo {pct(pt)} del presupuesto (hace falta 10 a 15 %)"); sems.append("AMARILLO")
-            else: sems.append("VERDE")
+            elif sh: avisos.append(f"{an:.0f} anuncios nuevos por semana; {th}"); sems.append(sh)
+            else: avisos.append(f"{an:.0f} anuncios nuevos por semana (sin histórico; práctica: 10 a 20 sin escalar, 20 a 50 escalando)")
         if fr is not None:
-            if fr > 3: avisos.append(f"frecuencia {ratio(fr)[:-1]}: audiencia saturada"); sems.append("ROJO")
-            elif fr > 2.5: avisos.append(f"frecuencia {ratio(fr)[:-1]}: cerca de saturar"); sems.append("AMARILLO")
-            else: sems.append("VERDE")
-        if dg is not None:
-            if dg > 28: avisos.append(f"el ganador principal tiene {dg:.0f} días: preparar el reemplazo"); sems.append("AMARILLO")
-            else: sems.append("VERDE")
-        sem = min(sems, key=lambda x: PEOR[x]) if sems else "SIN DATOS"
-        filas.append((4, "Testeo", "; ".join(avisos) if avisos else "ritmo de testeo sano", sem))
+            sh, th = _contra(fr, "frecuencia", hist, tol, lambda x: f"{x:.2f}".replace(".", ","))
+            if sh: avisos.append(f"frecuencia {ratio(fr)[:-1]}; {th}"); sems.append(sh)
+            else: avisos.append(f"frecuencia {ratio(fr)[:-1]} (sin histórico)")
+        if pt is not None: avisos.append(f"testeo {pct(pt)} del presupuesto (práctica: 10 a 15 % escalando)")
+        if dg is not None: avisos.append(f"el ganador principal tiene {dg:.0f} días")
+        sem = min(sems, key=lambda x: PEOR[x]) if sems else "SIN HISTÓRICO"
+        filas.append((4, "Testeo", "; ".join(avisos) if avisos else "sin datos de testeo", sem))
     else:
-        filas.append((4, "Testeo", "sin datos: cargá anuncios nuevos por semana, % del presupuesto en testeo, días del ganador principal y frecuencia", "SIN DATOS"))
-    sem = "ROJO" if m["roas"] < 1.5 else ("AMARILLO" if m["roas"] < s["roas_obj"] else "VERDE")
-    filas.append((5, "ROAS sobre cash neto", f"{ratio(m['roas'])} contra objetivo {ratio(s['roas_obj'])} (piso 1,5x; el primer mes entra {ratio(m['roas_m1'])})", sem))
+        filas.append((4, "Testeo", "sin datos: cargá anuncios nuevos por semana, % del presupuesto en testeo, días del ganador principal y frecuencia (--testeo), y tu ritmo habitual (--historico anuncios_nuevos=…)", "SIN HISTÓRICO"))
+    sem_h, txt = _contra(m["roas"], "roas", hist, tol, ratio)
+    sem_o = "ROJO" if m["roas"] <= 1.0 else ("VERDE" if m["roas"] >= s["roas_obj"] else "AMARILLO")
+    sem = min([x for x in (sem_o, sem_h) if x], key=lambda x: PEOR[x])
+    filas.append((5, "ROAS sobre cash neto", f"{ratio(m['roas'])} contra tu objetivo {ratio(s['roas_obj'])}; {txt}; el primer mes entra {ratio(m['roas_m1'])}", sem))
     partes, sems = [], []
     for k, lab, t1, t2 in CADENA_BENCH[e]:
-        sv = sem_mayor(s[k], t1, t2); sems.append(sv); partes.append(f"{lab} {pct(s[k])} [{sv.lower()}]")
-    filas.append((6, "Avance de la cadena", "; ".join(partes), min(sems, key=lambda x: PEOR[x])))
-    r = s["reembolsos"]
-    sem = "ROJO" if r > 0.10 else ("AMARILLO" if r > 0.07 or m["roas_m1"] < 1.0 else "VERDE")
-    filas.append((7, "Cash contra facturado", f"cobranza del primer mes {pct(s['cobro_m1'])}; el primer mes entra {ratio(m['roas_m1'])} la pauta; reembolsos {pct(r)}", sem))
+        sh, th = _contra(s[k], k, hist, tol, pct)
+        if sh: sems.append(sh); partes.append(f"{lab} {pct(s[k])} [{sh.lower()}; {th}]")
+        else: partes.append(f"{lab} {pct(s[k])} [sin histórico; mercado {pct(t1)} a {pct(t2)}+]")
+    filas.append((6, "Avance de la cadena", "; ".join(partes), min(sems, key=lambda x: PEOR[x]) if sems else "SIN HISTÓRICO"))
+    r = s["reembolsos"]; sh, th = _contra(r, "reembolsos", hist, tol, pct)
+    sem = sh or "SIN HISTÓRICO"
+    if m["roas_m1"] < 1.0: sem = "AMARILLO" if sem in ("VERDE", "SIN HISTÓRICO") else sem
+    filas.append((7, "Cash contra facturado", f"cobranza del primer mes {pct(s['cobro_m1'])}; el primer mes entra {ratio(m['roas_m1'])} la pauta" + (" (no cubre la pauta del mes que viene)" if m["roas_m1"] < 1.0 else "") + f"; reembolsos {pct(r)}; {th}", sem))
     primero = next((f for f in filas if f[3] == "ROJO"), None) or next((f for f in filas if f[3] == "AMARILLO"), None)
+    sin_hist = [f[1] for f in filas if f[3] == "SIN HISTÓRICO"]
     if primero is None:
-        decision = "Todo en verde: sostener o subir un escalón (+25 %) y medir 7 días. Si venís de bajar, dos semanas en verde antes de subir."
+        decision = "Todo lo que tiene umbral está en verde: sostener o subir un escalón (+25 %) y medir 7 días. Si venís de bajar, dos semanas en verde antes de subir."
     else:
         decision = f"{primero[3]} en «{primero[1]}»: {ACCION[primero[0]]}"
+    if sin_hist:
+        decision += f" Sin umbral propio todavía en: {', '.join(sin_hist)}. Cargá la mediana de tus últimas 4 semanas (--historico o --periodos): el umbral de cada métrica es TU promedio, no un número de mercado."
     return filas, decision
 
 def pct(x): return f"{x*100:.1f}".replace(".", ",") + " %"
@@ -185,7 +229,7 @@ def ratio(x): return f"{x:.2f}".replace(".", ",") + "x"
 def money(x): return ("$" + f"{x:,.2f}").replace(",", "X").replace(".", ",").replace("X", ".")
 def entero(x): return f"{x:,.0f}".replace(",", ".")
 
-def reporte(e, s, testeo=None):
+def reporte(e, s, testeo=None, hist=None, tol=0.25):
     m = modelo(e, s); sens = sensibilidad(e, s); un = m["unidad"]
     L = [f"EMBUDO: {e}   (supuestos en uso: los que cargaste; lo demás, el ejemplo)",
          f"Tu {un} vale (cash neto):            {money(m['vpu'])}",
@@ -194,8 +238,8 @@ def reporte(e, s, testeo=None):
          "Por cada paso: lo que pagás hoy, lo que te queda y lo máximo que podrías pagar (techo = costo + ganancia + fijos repartidos):"]
     for n, q, c, t, g in m["etapas"]:
         L.append(f"   {n:<24} cantidad {entero(q):>9}   pagás hoy {money(c):>10}   te queda {money(g):>10}   techo {money(t):>10}")
-    filas, decision = radiografia(e, s, m, testeo); m["radiografia"] = filas; m["decision"] = decision
-    L.append("LO QUE MÁS IMPORTA, en orden (se para en el primer rojo):")
+    filas, decision = radiografia(e, s, m, testeo, hist, tol); m["radiografia"] = filas; m["decision"] = decision
+    L.append(f"LO QUE MÁS IMPORTA, en orden (se para en el primer rojo). Umbral de cada métrica: TU promedio, con {tol:.0%} de tolerancia; sin histórico, solo referencia de mercado:")
     for n, nombre, lectura, sem in filas:
         L.append(f"   [{sem:<9}] {n}. {nombre}: {lectura}")
     L.append(f"DECISIÓN (una sola, medir 7 días): {decision}")
@@ -242,6 +286,9 @@ def main():
     ap.add_argument("--html", help="escribe un gráfico HTML en esta ruta")
     ap.add_argument("--supuestos", action="store_true", help="lista los supuestos y sus valores de ejemplo")
     ap.add_argument("--testeo", nargs="*", default=None, help="datos de testeo: anuncios_nuevos=12 pct_testeo=0.10 dias_ganador=20 frecuencia=2.1")
+    ap.add_argument("--historico", nargs="*", default=None, help="TUS promedios (mediana de las últimas 4 semanas o último mes de la campaña madre): cpu=1.10 gan_visita=0.40 conv_landing=0.21 show_vivo=0.14 cierre_pct=0.38 roas=2.8 anuncios_nuevos=15 frecuencia=2.0 reembolsos=0.05 …")
+    ap.add_argument("--periodos", help="JSON con una lista de períodos (cada uno un objeto con las mismas claves); se usa la mediana de cada clave como histórico")
+    ap.add_argument("--tolerancia", type=float, default=0.25, help="cuánto peor que tu promedio se tolera antes del rojo (0.20 a 0.30; default 0.25)")
     a = ap.parse_args(); s = dict(SUPUESTOS[a.embudo])
     if a.supuestos:
         for k, v in s.items(): print(f"{k} = {v}")
@@ -254,7 +301,18 @@ def main():
         testeo = {}
         for kv in a.testeo:
             k, v = kv.split("="); testeo[k] = float(v)
-    texto, m, sens = reporte(a.embudo, s, testeo); print(texto)
+    hist = {}
+    if a.periodos:
+        import statistics
+        filas_p = json.load(open(a.periodos, encoding="utf-8"))
+        claves = set().union(*[set(f) for f in filas_p]) if filas_p else set()
+        for k in claves:
+            vals = [float(f[k]) for f in filas_p if k in f]
+            if vals: hist[k] = statistics.median(vals)
+    if a.historico:
+        for kv in a.historico:
+            k, v = kv.split("="); hist[k] = float(v)
+    texto, m, sens = reporte(a.embudo, s, testeo, hist or None, a.tolerancia); print(texto)
     if a.html:
         html(a.embudo, s, m, sens, a.html); print(f"gráfico: {a.html}")
 

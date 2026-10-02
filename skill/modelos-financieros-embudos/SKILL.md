@@ -19,16 +19,18 @@ Si en `scripts/calculadora.py` la constante `INSTAGRAM` tiene un valor, la líne
 2. **Cuatro números mandan**, y se miran antes que cualquier otro: la **ganancia por visita** (resume todo lo que pasa después de la página; su par es el costo por visita), el **costo por unidad contra el techo y el objetivo** (CPL, costo por visita o por entrada: el termómetro del mercado), la **conversión de la landing** (la palanca más barata) y el **testeo** (si no entran anuncios nuevos, el CPL sube solo). Después, el ROAS sobre cash neto, el avance de la cadena y la caja. Los umbrales están en `reference/benchmarks.md` § 1.
 3. **Se mira en ese orden y se para en el primer rojo.** Un rojo arriba arrastra todo lo de abajo: si el CPL subió, el costo por asistente y por solicitud suben aunque el webinar esté igual.
 4. **Una decisión por vez, medida en 7 días, anotada.** Nunca dos palancas a la vez, nunca por un día, nunca con facturado: siempre con cash neto.
-5. **Los números propios mandan.** Con 4 o más períodos, el techo es la mediana de los últimos 4; con 8 o más, los benchmarks del usuario reemplazan la tabla. Sin históricos, la primera tarea es cargar las últimas 4 semanas.
+5. **El umbral de cada métrica es el promedio propio del usuario, no un número inventado.** La mediana de sus últimas 4 semanas (o el último mes de su campaña madre) es la vara: igual o mejor, verde; hasta 20 a 30 % peor, amarillo; más que eso, rojo. El techo, el objetivo y el guardarraíl también salen de sus números. Sin históricos, los rangos de mercado son solo un punto de partida, se presentan como tal y la primera tarea es cargar 4 semanas.
+6. **Los umbrales de costo dependen del nicho, y el nicho se ve en el CPM.** Un CPL de 1 con CPM de 3 y un CPL de 10 con CPM de 25 son el mismo embudo: lo comparable es cuántas unidades salen por cada 1.000 impresiones (CPL ÷ CPM). Nunca juzgues un costo por lead sin preguntar el CPM.
 
 ## Protocolo de entrada (qué pedir y en qué orden)
 
 Pedí todo en **un solo bloque**, con los valores del ejemplo como default y diciendo cuáles son del ejemplo. Orden de prioridad, porque cada bloque alcanza para responder algo:
 
-1. **Lo mínimo:** tipo de embudo; inversión del período; visitas a la página (o CPM, CTR y % de clics que cargan); unidades (registros, leads, entradas o compras); ventas por producto y precios; facturado; cash cobrado hasta hoy. Con esto ya sale la ganancia por visita, el valor de la unidad, el techo, el objetivo y el semáforo.
-2. **Los pasos del medio:** grupo, en vivo, replay, solicitudes, aplicaciones, agendas, llamadas, bumps, OTOs, programa. Con esto salen los techos por paso y el eslabón roto.
-3. **El testeo:** anuncios nuevos publicados en los últimos 7 días, % del presupuesto que va a testeo, días que tiene el anuncio principal, frecuencia. Con esto sale si el embudo está alimentado.
-4. **Los costos:** pasarela, comisión de ventas, reembolsos, costo por unidad en WhatsApp o IA, fijos, cobranza por mes (si hay cuotas), ROAS objetivo (default 2; 2,5 a 3 en llamada), margen de seguridad (default 30 %).
+1. **Lo mínimo:** tipo de embudo; inversión del período; CPM (siempre: es el precio del nicho); visitas a la página (o CTR y % de clics que cargan); unidades (registros, leads, entradas o compras); ventas por producto y precios; facturado; cash cobrado hasta hoy. Con esto ya sale la ganancia por visita, el valor de la unidad, el techo, el objetivo y la lectura del costo contra el CPM.
+2. **Sus históricos (la vara de cada umbral):** la mediana de sus últimas 4 semanas, o el último mes de su campaña madre, de CPL, ganancia por visita, conversión de la landing, show, solicitud, cierre, ROAS, anuncios nuevos por semana, frecuencia y reembolsos. Sin esto, cada fila queda "sin histórico" y se le dice que cargarlo es su primera tarea.
+3. **Los pasos del medio:** grupo, en vivo, replay, solicitudes, aplicaciones, agendas, llamadas, bumps, OTOs, programa. Con esto salen los techos por paso y el eslabón roto.
+4. **El testeo:** anuncios nuevos publicados en los últimos 7 días, % del presupuesto que va a testeo, días que tiene el anuncio principal, frecuencia. Con esto sale si el embudo está alimentado.
+5. **Los costos:** pasarela, comisión de ventas, reembolsos, costo por unidad en WhatsApp o IA, fijos, cobranza por mes (si hay cuotas), ROAS objetivo (default 2; 2,5 a 3 en llamada), margen de seguridad (default 30 %).
 
 Aceptá datos parciales. Lo que falte se completa con el escenario conservador de `reference/benchmarks.md` y se marca como "supuesto de mercado", nunca como dato del usuario. Si el usuario describe algo híbrido (webinar gratuito que vende un taller barato y después un programa), usá `webinar_gratuito` con el taller como oferta y el programa como "programa superior". En llamada, un período con 1 o 2 ventas no es un dato: pedí 3 a 4 eventos o la mediana.
 
@@ -36,7 +38,7 @@ Aceptá datos parciales. Lo que falte se completa con el escenario conservador d
 
 ### Modo 0 · Radiografía (la respuesta por defecto cuando hay números)
 
-Con lo que el usuario cargó, devolvé la tabla de **lo que más importa, en orden, con semáforo**: ganancia por visita (y margen por visita = ganancia ÷ costo por visita: rojo < 0,3, amarillo hasta 1,0, verde desde 1,0), costo por unidad contra objetivo y techo, conversión de la landing, testeo, ROAS sobre cash neto contra objetivo y piso 1,5, avance de la cadena contra los umbrales, cash contra facturado. Después: el primer rojo (o el primer amarillo), **una sola decisión** y **qué medir en 7 días**. Si podés ejecutar código, `scripts/calculadora.py` ya imprime esta radiografía (con `--testeo anuncios_nuevos=… pct_testeo=… dias_ganador=… frecuencia=…` para la fila de testeo); si no, aplicá los umbrales de `reference/benchmarks.md` § 1 a mano y mostrá la cuenta.
+Con lo que el usuario cargó, devolvé la tabla de **lo que más importa, en orden, con semáforo**: ganancia por visita, costo por unidad (contra su techo y su objetivo, contra su CPL promedio y en relación a su CPM), conversión de la landing, testeo, ROAS sobre cash neto, avance de la cadena, cash contra facturado. **El umbral de cada fila es el promedio propio del usuario** con 20 a 30 % de tolerancia; las únicas reglas fijas son matemáticas (ganancia negativa, costo por encima del techo, ROAS debajo de 1). Sin histórico, la fila queda "sin histórico" con el punto de partida de mercado como referencia, y la decisión incluye cargar sus últimas 4 semanas. Después: el primer rojo (o el primer amarillo), **una sola decisión** y **qué medir en 7 días**. Si podés ejecutar código, `scripts/calculadora.py` imprime esta radiografía: `--historico cpu=… gan_visita=… conv_landing=… show_vivo=… cierre_pct=… roas=… anuncios_nuevos=… frecuencia=… cpm=…` carga sus promedios (o `--periodos archivo.json` con sus últimos períodos, y usa la mediana), `--tolerancia 0.25` ajusta la tolerancia y `--testeo anuncios_nuevos=… pct_testeo=… dias_ganador=… frecuencia=…` alimenta la fila de testeo. Si no podés ejecutar código, aplicá las reglas de `reference/benchmarks.md` § 1 a mano y mostrá la cuenta.
 
 ### Modo 1 · Calculadora: "¿cuánto puedo pagar por lead?"
 
@@ -87,11 +89,13 @@ Cuando el usuario pregunte por qué (por qué subió el CPL, qué es el techo, p
 - Una palanca por vez; nada se decide por un día; en llamada, 3 a 4 eventos.
 - Los benchmarks de Estados Unidos y B2B no aplican al tráfico frío en español (33 % de asistencia o 12 % de compra sobre asistentes no son referencia acá).
 - No inventes números del usuario: lo que falta es supuesto de mercado y se dice.
+- No inventes umbrales: el umbral es el promedio del usuario con 20 a 30 % de tolerancia. Sin históricos, decilo y pedí 4 semanas.
+- Nunca juzgues un CPL, un costo por visita o un costo por agenda sin el CPM: el costo se lee como unidades por cada 1.000 impresiones y como razón del CPM.
 - Si hay un rojo en la ganancia por visita con el costo por visita en verde, el problema nunca es el tráfico.
 
 ## Benchmarks (orden de magnitud, tráfico frío en español)
 
-Todo en `reference/benchmarks.md` (umbrales de lo que más importa, conversiones y costos por embudo, testeo y escalado, referencias reales anonimizadas). Los más usados: CPL de webinar gratuito 0,80 a 1,50 es bueno; 12 a 16 % de asistencia en vivo es normal; 10 a 15 % de los asistentes en vivo solicitan; 40 a 55 % de las solicitudes compran con vendedor; costo por agenda de 60 a 120 es bueno; cierre en llamada de 25 a 35 % es bueno; bumps 25 a 35 %; ROAS sobre cash neto de 1,8 a 2,5 es bueno; margen por visita de 1,0 o más es verde.
+Todo en `reference/benchmarks.md` (umbrales contra el promedio propio, costos en relación al CPM, conversiones por embudo, testeo y escalado, referencias reales anonimizadas). Para arrancar sin históricos: un CPL bueno es 25 a 40 % del CPM (2,5 a 4 registros por cada 1.000 impresiones); un costo por visita bueno es 3 a 8 % del CPM; 12 a 16 % de asistencia en vivo es normal; 10 a 15 % de los asistentes en vivo solicitan; 40 a 55 % de las solicitudes compran con vendedor; cierre en llamada de 25 a 35 % es bueno; bumps 25 a 35 %; ROAS sobre cash neto de 1,8 a 2,5 es bueno. Todo esto se presenta como punto de partida y se reemplaza por los números del usuario.
 
 ## Lo que esta skill no hace
 
