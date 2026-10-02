@@ -399,12 +399,26 @@ class Builder:
             self.put(ws, r, 2, f"Ganancia por {nombre}", bold=g.get("bold", False))
             self.put(ws, r, 3, f"=IF({sim[k]}=0,0,{sim['profit']}/{sim[k]})", "money", "out", bold=g.get("bold", False))
             self.put(ws, r, 4, g.get("como", f"Ganancia del período ÷ {nombre}s. Su par es el costo por {nombre}."), wrap=True); r += 1
-        # estado de los supuestos (fila 4) y colores
+        # chequeos de consistencia (los mismos del modelo, con los números de esta hoja)
+        r = self.section(ws, r, "Chequeos: tus números tienen que ser consistentes, no solo estar en rango", ncols=3)
+        chq_first = r
+        for ch in self.s["chequeos"]:
+            claves = KEY_RE.findall(ch["cond"])
+            if any(k not in sim for k in claves):
+                continue   # chequeos de hojas que acá no existen (escenario, crecimiento)
+            self.put(ws, r, 2, ch["label"])
+            self.put(ws, r, 3, '=IF(' + KEY_RE.sub(lambda m: sim[m.group(1)], ch["cond"]) + ',"OK","REVISAR")', None, "out")
+            self.put(ws, r, 4, ch.get("ayuda", ""), wrap=True)
+            r += 1
+        chq_last = r - 1
+        ws.conditional_formatting.add(f"C{chq_first}:C{chq_last}", CellIsRule(operator="equal", formula=['"OK"'], fill=FILL_OK))
+        ws.conditional_formatting.add(f"C{chq_first}:C{chq_last}", CellIsRule(operator="equal", formula=['"REVISAR"'], fill=FILL_BAD))
+        # estado de los supuestos (fila 4): rangos de cada celda amarilla + chequeos de consistencia
         conds = []
         for rr, fmt in entradas:
             conds.append(f"ISNUMBER(C{rr}),C{rr}>=0" + (f",C{rr}<=1" if fmt in ("pct", "pct2") else ""))
-        self.put(ws, 4, 3, f'=IF(AND({",".join(conds)}),"OK","REVISAR")', None, "out", bold=True)
-        self.put(ws, 4, 4, "OK = todos los supuestos tienen sentido. REVISAR = hay un porcentaje fuera de 0 a 1, un negativo o un texto donde va un número.", wrap=True)
+        self.put(ws, 4, 3, f'=IF(AND({",".join(conds)},COUNTIF(C{chq_first}:C{chq_last},"REVISAR")=0),"OK","REVISAR")', None, "out", bold=True)
+        self.put(ws, 4, 4, "OK = todos los supuestos tienen sentido y los chequeos del final pasan. REVISAR = hay un porcentaje fuera de 0 a 1, un negativo, un texto donde va un número, o un chequeo de consistencia que falla (mirá el bloque Chequeos al final).", wrap=True)
         ws.conditional_formatting.add("C4", CellIsRule(operator="equal", formula=['"OK"'], fill=FILL_OK))
         ws.conditional_formatting.add("C4", CellIsRule(operator="equal", formula=['"REVISAR"'], fill=FILL_BAD))
         for rr in sem_rows:

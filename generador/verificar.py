@@ -296,7 +296,15 @@ def verificar_simulacion(sim_path, modelo_path):
         tmp3 = os.path.join(tempfile.gettempdir(), "simulacion_invalida.xlsx"); wb3.save(tmp3); v3 = calcular(tmp3)
         detecta = str(v3.get(("SIMULACIÓN", "C4"))) == "REVISAR"
         if not detecta: fallas.append(f"'Estado de tus números' no marca REVISAR con 150 % en la fila {fila_pct}")
-    print(f"  fórmulas: {n_f} · filas comparadas con Modelo: {comparadas} · diferencias: {sum(1 for f in fallas if '≠' in f)} · reacciona: {reacciona} · detecta inválido: {detecta}")
+    # una cobranza que suma más de 100 % (infla el cash) tiene que marcar REVISAR aunque cada celda esté en rango
+    detecta2 = None; fila_m1 = next((r for r in range(6, ws.max_row + 1) if str(ws.cell(r, 2).value or "").startswith("% del facturado que entra en el mes 1")), None)
+    if fila_m1:
+        wb4 = openpyxl.load_workbook(sim_path); wb4["Simulación"].cell(fila_m1, 3).value = 0.95
+        tmp4 = os.path.join(tempfile.gettempdir(), "simulacion_cobranza.xlsx"); wb4.save(tmp4); v4 = calcular(tmp4)
+        detecta2 = str(v4.get(("SIMULACIÓN", "C4"))) == "REVISAR"
+        if not detecta2: fallas.append("'Estado de tus números' no marca REVISAR con una cobranza que suma más de 100 %")
+    n_chq = sum(1 for r in range(6, ws.max_row + 1) if isinstance(ws.cell(r, 3).value, str) and ws.cell(r, 3).value.startswith('=IF(') and ws.cell(r, 3).value.endswith('"OK","REVISAR")'))
+    print(f"  fórmulas: {n_f} · filas comparadas con Modelo: {comparadas} · diferencias: {sum(1 for f in fallas if '≠' in f)} · reacciona: {reacciona} · detecta % inválido: {detecta} · detecta cobranza > 100 %: {detecta2} · chequeos de consistencia: {n_chq}")
     for f in fallas[:8]: print("   -", f)
     return not fallas
 
