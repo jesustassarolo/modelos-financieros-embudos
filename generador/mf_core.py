@@ -260,18 +260,30 @@ class Builder:
                        "Amarillo = tu número: arranca igual a Supuestos; escribí encima para probar (CPM, CTR, conversiones, precios, costos). "
                        "Al lado, la base. 'Con tus números' se recalcula al instante y se compara con el Modelo. Para volver a la base, "
                        "borrá la celda amarilla y escribí =D seguido del número de fila (por ejemplo =D9).")
-        r = self.header(ws, r, ["Paso / métrica", "Tu número (editable)", "Base (Supuestos)", "Con tus números", "Base (Modelo)", "Diferencia", "Cómo se calcula"])
+        r = self.header(ws, r, ["Paso / métrica", "Tu número (editable)", "Base (Supuestos)", "Con tus números", "Base (Modelo)", "Diferencia", "Cómo se calcula", "Rango"])
+        ws.column_dimensions[col(9)].width = 11
         first = r
         sim = {}        # clave -> celda del simulador (supuestos: columna C; cálculos: columna E)
         filas_in = []   # filas de supuestos
         sem_rows = []
+        from openpyxl.worksheet.datavalidation import DataValidation
+        dv_pct = DataValidation(type="decimal", operator="between", formula1="0", formula2="1", allow_blank=False, showErrorMessage=True,
+                                errorTitle="Porcentaje fuera de rango", error="Escribí el porcentaje como fracción entre 0 y 1 (15 % = 0,15).")
+        dv_pos = DataValidation(type="decimal", operator="greaterThanOrEqual", formula1="0", allow_blank=False, showErrorMessage=True,
+                                errorTitle="Valor inválido", error="Tiene que ser un número mayor o igual a 0.")
+        ws.add_data_validation(dv_pct); ws.add_data_validation(dv_pos)
 
         def fila_supuesto(dep, r):
+            fmt = self.fmt.get(dep)
             self.put(ws, r, 2, self.label.get(dep, dep))
-            self.put(ws, r, 3, "=" + self.ref[dep], self.fmt.get(dep), "in")
-            self.put(ws, r, 4, "=" + self.ref[dep], self.fmt.get(dep), "out")
+            self.put(ws, r, 3, "=" + self.ref[dep], fmt, "in")
+            self.put(ws, r, 4, "=" + self.ref[dep], fmt, "out")
             self.put(ws, r, 7, f'=IF(C{r}<>D{r},"← cambiado","")')
             self.put(ws, r, 8, "Supuesto. Escribí encima para probar; la base queda al lado.", wrap=True)
+            if fmt in ("pct", "pct2"):
+                self.put(ws, r, 9, f'=IF(AND(ISNUMBER(C{r}),C{r}>=0,C{r}<=1),"OK","REVISAR")', None, "out"); dv_pct.add(f"C{r}")
+            else:
+                self.put(ws, r, 9, f'=IF(AND(ISNUMBER(C{r}),C{r}>=0),"OK","REVISAR")', None, "out"); dv_pos.add(f"C{r}")
             sim[dep] = f"$C${r}"; filas_in.append(r)
 
         for it in self.s["calculo"]:
@@ -307,6 +319,9 @@ class Builder:
             self.put(ws, r, 6, "=" + self.ref[f"gan_{k}"], "money", "out"); self.put(ws, r, 7, f'=IF(AND(ISNUMBER(E{r}),ISNUMBER(F{r})),E{r}-F{r},"")', "money", "out")
             self.put(ws, r, 8, g.get("como", f"Ganancia del período ÷ {nombre}s. Su par es el costo por {nombre}."), wrap=True); r += 1
         last = r - 1
+        self.sim = sim; self.sim_rango = f"'Simulador'!$I${first}:$I${last}"
+        self.sim_abs = {k: "'Simulador'!" + v for k, v in sim.items()}   # para referenciar el Simulador desde otras hojas
+        ws.conditional_formatting.add(f"I{first}:I{last}", CellIsRule(operator="equal", formula=['"REVISAR"'], fill=FILL_BAD))
         # formatos condicionales: supuesto cambiado en naranja; semáforos con color
         ws.conditional_formatting.add(f"C{first}:C{last}", FormulaRule(formula=[f"AND(ISNUMBER(C{first}),C{first}<>D{first})"], fill=PatternFill("solid", fgColor="F8CBAD")))
         for rr in sem_rows:
@@ -314,7 +329,8 @@ class Builder:
         r += 1
         for linea in ["Cómo se lee: cambiá una celda amarilla (por ejemplo el CPM, el CTR, la conversión de la landing, el show, el cierre o el precio) y mirá cómo se mueven la cantidad de cada paso, el costo por paso, el facturado, el cash neto, la ganancia, el ROAS, el techo y el semáforo.",
                       "Una variable por vez: si cambiás tres cosas no sabés cuál movió el resultado. La columna Diferencia te muestra exactamente cuánto cambió cada número contra la base.",
-                      "El Simulador no modifica Supuestos ni Modelo: es tu mesa de pruebas. Cuando una prueba te convence, pasá ese número a Supuestos."]:
+                      "El Simulador no modifica Supuestos ni Modelo: es tu mesa de pruebas. Cuando una prueba te convence, pasá ese número a Supuestos.",
+                      "La columna Rango avisa si escribiste algo imposible (un porcentaje fuera de 0 a 1, un negativo, texto) y Chequeos repite los chequeos del modelo con tus números del Simulador."]:
             c = ws.cell(r, 2, linea); c.alignment = WRAP; ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=8); ws.row_dimensions[r].height = 30; r += 1
         ws.freeze_panes = "C5"
         return ws
@@ -659,6 +675,19 @@ class Builder:
             self.put(ws, r, 3, f'=IF({cond},"OK","REVISAR")', None, "out")
             self.put(ws, r, 4, ch.get("ayuda", ""), wrap=True)
             r += 1
+        # los mismos chequeos, con los números que escribiste en el Simulador
+        if getattr(self, "sim", None):
+            r = self.section(ws, r, "Simulador: lo que escribiste en las celdas amarillas", ncols=3)
+            self.put(ws, r, 2, "Ningún supuesto del Simulador fuera de rango (porcentajes entre 0 y 1, números no negativos)")
+            self.put(ws, r, 3, f'=IF(COUNTIF({self.sim_rango},"REVISAR")=0,"OK","REVISAR")', None, "out")
+            self.put(ws, r, 4, "La columna Rango del Simulador marca la fila con el problema.", wrap=True)
+            r += 1
+            for ch in self.s["chequeos"]:
+                self.put(ws, r, 2, "Simulador: " + ch["label"])
+                cond = KEY_RE.sub(lambda m: self.sim_abs.get(m.group(1), self.ref[m.group(1)]), ch["cond"])
+                self.put(ws, r, 3, f'=IF({cond},"OK","REVISAR")', None, "out")
+                self.put(ws, r, 4, ch.get("ayuda", ""), wrap=True)
+                r += 1
         last = r - 1
         r += 1
         self.put(ws, r, 2, "Estado general del modelo", bold=True)

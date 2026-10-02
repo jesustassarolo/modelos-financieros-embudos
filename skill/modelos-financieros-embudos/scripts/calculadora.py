@@ -11,6 +11,7 @@ Uso:
   python3 calculadora.py --embudo webinar_gratuito --testeo anuncios_nuevos=12 pct_testeo=0.10 dias_ganador=20 frecuencia=2.1
   python3 calculadora.py --embudo webinar_gratuito --set cpm=5.2 --historico cpu=0.95 gan_visita=0.48 show_vivo=0.16 roas=3.1   # umbrales = tus promedios
   python3 calculadora.py --embudo llamada --periodos ultimas_semanas.json      # mediana de tus períodos como histórico
+  python3 calculadora.py --perfil perfil/mi_embudo.json                            # plug and play: todo sale del perfil de la persona
 Salida: el bloque de respuesta (valor por unidad, techo, objetivo, costo / ganancia / techo por paso, la radiografía de lo que
 más importa con semáforo y UNA decisión, inversión para la meta, palanca que más mueve) y, con --html, un gráfico con marca de agua.
 """
@@ -226,12 +227,31 @@ def radiografia(e, s, m, testeo=None, hist=None, tol=0.25):
 
 def pct(x): return f"{x*100:.1f}".replace(".", ",") + " %"
 def ratio(x): return f"{x:.2f}".replace(".", ",") + "x"
+LANZ_MES = {"low_ticket": 1, "webinar_gratuito": 4, "llamada": 1, "webinar_pago": 2}
+
+def proyeccion(e, s, m, meses=12, crecimiento=0.10, lanz_mes=None, cobranza=None, caja_inicial=0.0):
+    """Proyección mes a mes: inversión creciendo, cash según la cobranza (mes 1 / 2 / 3), ganancia de caja y caja necesaria."""
+    lanz_mes = lanz_mes or LANZ_MES[e]
+    if cobranza is None:
+        m1 = s.get("cobro_m1", 1.0); cobranza = [m1, (1 - m1) / 2, (1 - m1) / 2]
+    cpu = m["cpu"]; fact_u = d(m["facturado"], m["unidades"]); ven_u = d(m["ventas"], m["unidades"]); desc = 1 - s["pasarela"] - s["closers"] - s["reembolsos"]
+    filas, facts, acum = [], [], 0.0
+    for i in range(meses):
+        inv = s["inversion"] * lanz_mes * (1 + crecimiento) ** i
+        uni = d(inv, cpu); fact = uni * fact_u; facts.append(fact)
+        cash = sum(facts[i - k] * cobranza[k] for k in range(len(cobranza)) if i - k >= 0)
+        gan = cash * desc - uni * s["costo_semivar"] - s["fijos"] * lanz_mes - inv; acum += gan
+        filas.append(dict(mes=i + 1, inversion=inv, unidades=uni, ventas=uni * ven_u, facturado=fact, cash=cash, ganancia=gan, acumulado=acum))
+    peor = min(f["acumulado"] for f in filas)
+    return dict(filas=filas, caja_necesaria=max(0.0, -peor), saldo_minimo=caja_inicial + peor, ganancia_12m=acum, cobranza=cobranza, lanz_mes=lanz_mes, crecimiento=crecimiento)
+
 def money(x): return ("$" + f"{x:,.2f}").replace(",", "X").replace(".", ",").replace("X", ".")
 def entero(x): return f"{x:,.0f}".replace(",", ".")
 
-def reporte(e, s, testeo=None, hist=None, tol=0.25):
+def reporte(e, s, testeo=None, hist=None, tol=0.25, proy=None, nombre=None):
     m = modelo(e, s); sens = sensibilidad(e, s); un = m["unidad"]
-    L = [f"EMBUDO: {e}   (supuestos en uso: los que cargaste; lo demás, el ejemplo)",
+    L = [f"EMBUDO: {e}" + (f" · {nombre}" if nombre else "") + "   (supuestos en uso: los que cargaste; lo demás, el ejemplo)",
+         "TUS UMBRALES (hasta cuánto pagar por cada paso, con lo que pagás hoy al lado):",
          f"Tu {un} vale (cash neto):            {money(m['vpu'])}",
          f"Hasta cuánto podés pagar (techo):    {money(m['techo'])}   <- acá no ganás ni perdés",
          f"Cuánto te conviene pagar (objetivo): {money(m['objetivo'])}   <- con {s['margen_seg']:.0%} de colchón",
@@ -250,6 +270,16 @@ def reporte(e, s, testeo=None, hist=None, tol=0.25):
     else:
         L.append(f"Para {s['meta_ventas']} ventas por período necesitás invertir ≈ {money(m['inv_meta'])} (al costo actual) o {money(m['inv_meta_obj'])} (al objetivo)")
     L.append("La palanca que más mueve (+10 % en cada una): " + "; ".join(f"{lab}: {money(dp)}" for lab, dp in sens[:3]))
+    proy = proy or {}
+    P = proyeccion(e, s, m, proy.get("meses", 12), proy.get("crecimiento", 0.10), proy.get("lanz_mes"), proy.get("cobranza"), proy.get("caja_inicial", 0.0))
+    L.append(f"TU PROYECCIÓN ({len(P['filas'])} meses; {P['lanz_mes']} período(s) por mes; inversión +{P['crecimiento']:.0%} por mes; cobranza {' / '.join(f'{c:.0%}' for c in P['cobranza'])}):")
+    L.append(f"   {'mes':>3} {'inversión':>11} {'unidades':>9} {'ventas':>7} {'facturado':>11} {'cash cobrado':>13} {'ganancia caja':>14} {'acumulado':>12}")
+    for f in P["filas"]:
+        if f["mes"] in (1, 2, 3, 6, 9, 12) or f["mes"] == len(P["filas"]):
+            L.append(f"   {f['mes']:>3} {money(f['inversion']):>11} {entero(f['unidades']):>9} {f['ventas']:>7.1f} {money(f['facturado']):>11} {money(f['cash']):>13} {money(f['ganancia']):>14} {money(f['acumulado']):>12}")
+    L.append(f"   Caja necesaria para no frenar la pauta: {money(P['caja_necesaria'])} (peor momento del acumulado)" + (" → el embudo se autofinancia" if P["caja_necesaria"] == 0 else f"; con tu caja inicial el saldo mínimo es {money(P['saldo_minimo'])}"))
+    L.append(f"   Ganancia de caja acumulada en el período: {money(P['ganancia_12m'])}")
+    m["proyeccion"] = P
     L.append(MARCA)
     return "\n".join(L), m, sens
 
@@ -280,7 +310,8 @@ def html(e, s, m, sens, path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--embudo", required=True, choices=list(SUPUESTOS))
+    ap.add_argument("--embudo", choices=list(SUPUESTOS), help="tipo de embudo (obligatorio si no hay --perfil)")
+    ap.add_argument("--perfil", help="perfil/mi_embudo.json: embudo, supuestos, historico, testeo, proyeccion y tolerancia de la persona; con esto no hace falta nada más")
     ap.add_argument("--json", help="archivo JSON con supuestos (solo los que quieras cambiar)")
     ap.add_argument("--set", nargs="*", default=[], help="clave=valor (porcentajes como 0.15)")
     ap.add_argument("--html", help="escribe un gráfico HTML en esta ruta")
@@ -289,19 +320,24 @@ def main():
     ap.add_argument("--historico", nargs="*", default=None, help="TUS promedios (mediana de las últimas 4 semanas o último mes de la campaña madre): cpu=1.10 gan_visita=0.40 conv_landing=0.21 show_vivo=0.14 cierre_pct=0.38 roas=2.8 anuncios_nuevos=15 frecuencia=2.0 reembolsos=0.05 …")
     ap.add_argument("--periodos", help="JSON con una lista de períodos (cada uno un objeto con las mismas claves); se usa la mediana de cada clave como histórico")
     ap.add_argument("--tolerancia", type=float, default=0.25, help="cuánto peor que tu promedio se tolera antes del rojo (0.20 a 0.30; default 0.25)")
-    a = ap.parse_args(); s = dict(SUPUESTOS[a.embudo])
+    a = ap.parse_args(); perfil = {}
+    if a.perfil:
+        perfil = json.load(open(a.perfil, encoding="utf-8")); a.embudo = a.embudo or perfil.get("embudo")
+    if not a.embudo:
+        ap.error("falta --embudo (o un --perfil con la clave 'embudo')")
+    s = dict(SUPUESTOS[a.embudo]); s.update({k: v for k, v in perfil.get("supuestos", {}).items() if k in s})
     if a.supuestos:
         for k, v in s.items(): print(f"{k} = {v}")
         return
     if a.json: s.update(json.load(open(a.json, encoding="utf-8")))
     for kv in a.set:
         k, v = kv.split("="); s[k] = float(v)
-    testeo = None
+    testeo = dict(perfil.get("testeo", {})) or None
     if a.testeo is not None:
-        testeo = {}
+        testeo = dict(testeo or {})
         for kv in a.testeo:
             k, v = kv.split("="); testeo[k] = float(v)
-    hist = {}
+    hist = dict(perfil.get("historico", {}))
     if a.periodos:
         import statistics
         filas_p = json.load(open(a.periodos, encoding="utf-8"))
@@ -312,7 +348,8 @@ def main():
     if a.historico:
         for kv in a.historico:
             k, v = kv.split("="); hist[k] = float(v)
-    texto, m, sens = reporte(a.embudo, s, testeo, hist or None, a.tolerancia); print(texto)
+    tol = perfil.get("tolerancia", a.tolerancia)
+    texto, m, sens = reporte(a.embudo, s, testeo, hist or None, tol, perfil.get("proyeccion"), perfil.get("nombre")); print(texto)
     if a.html:
         html(a.embudo, s, m, sens, a.html); print(f"gráfico: {a.html}")
 

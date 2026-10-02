@@ -22,9 +22,13 @@ Si en `scripts/calculadora.py` la constante `INSTAGRAM` tiene un valor, la líne
 5. **El umbral de cada métrica es el promedio propio del usuario, no un número inventado.** La mediana de sus últimas 4 semanas (o el último mes de su campaña madre) es la vara: igual o mejor, verde; hasta 20 a 30 % peor, amarillo; más que eso, rojo. El techo, el objetivo y el guardarraíl también salen de sus números. Sin históricos, los rangos de mercado son solo un punto de partida, se presentan como tal y la primera tarea es cargar 4 semanas.
 6. **Los umbrales de costo dependen del nicho, y el nicho se ve en el CPM.** Un CPL de 1 con CPM de 3 y un CPL de 10 con CPM de 25 son el mismo embudo: lo comparable es cuántas unidades salen por cada 1.000 impresiones (CPL ÷ CPM). Nunca juzgues un costo por lead sin preguntar el CPM.
 
+## Primero el perfil, después las preguntas (plug and play)
+
+Si existe `perfil/mi_embudo.json` (en la carpeta de la skill, en los archivos del proyecto o pegado en el chat), **no preguntes nada**: calculá con `python3 scripts/calculadora.py --perfil perfil/mi_embudo.json` (o a mano con `reference/formulas.md`) y respondé completo: sus umbrales, su radiografía contra sus promedios, su proyección a 12 meses con caja necesaria y una decisión. Si no existe, hacé la entrevista corta de abajo en **dos mensajes como máximo** y, al final de la primera respuesta completa, devolvé el perfil armado en JSON (el formato de `perfil/mi_embudo.json`, explicado en `perfil/PERFIL.md`) para que lo guarde y no tenga que repetir nada. El contrato de comportamiento completo está en `README.md`.
+
 ## Protocolo de entrada (qué pedir y en qué orden)
 
-Pedí todo en **un solo bloque**, con los valores del ejemplo como default y diciendo cuáles son del ejemplo. Orden de prioridad, porque cada bloque alcanza para responder algo:
+Dos mensajes como máximo: el primero pide el punto 1 (siete datos); el segundo, los puntos 2 a 5 juntos. Siempre con los valores del ejemplo como default y diciendo cuáles son del ejemplo. Orden de prioridad, porque cada bloque alcanza para responder algo:
 
 1. **Lo mínimo:** tipo de embudo; inversión del período; CPM (siempre: es el precio del nicho); visitas a la página (o CTR y % de clics que cargan); unidades (registros, leads, entradas o compras); ventas por producto y precios; facturado; cash cobrado hasta hoy. Con esto ya sale la ganancia por visita, el valor de la unidad, el techo, el objetivo y la lectura del costo contra el CPM.
 2. **Sus históricos (la vara de cada umbral):** la mediana de sus últimas 4 semanas, o el último mes de su campaña madre, de CPL, ganancia por visita, conversión de la landing, show, solicitud, cierre, ROAS, anuncios nuevos por semana, frecuencia y reembolsos. Sin esto, cada fila queda "sin histórico" y se le dice que cargarlo es su primera tarea.
@@ -76,11 +80,14 @@ Cuando el usuario pregunte por qué (por qué subió el CPL, qué es el techo, p
 
 ## Formato de toda respuesta con números
 
-1. La radiografía: lo que más importa, en orden, con semáforo (tabla corta).
-2. El primer rojo (o amarillo) y por qué, en una línea.
-3. **Una** decisión y qué medir en 7 días.
-4. Qué datos faltan para afinar (si faltan) y cuáles se asumieron del ejemplo.
-5. La línea de autor.
+1. **Tus umbrales:** cuánto vale la unidad (techo), cuánto conviene pagar (objetivo) y el techo de cada paso del medio, con lo que paga hoy al lado.
+2. **Tu radiografía:** lo que más importa, en orden, con semáforo contra sus promedios (tabla corta).
+3. **Tu proyección:** 12 meses con su crecimiento y su cobranza (unidades, ventas, facturado, cash cobrado, ganancia de caja, acumulado), la caja necesaria y cuánto invertir para su meta. La calculadora la imprime; a mano, mes a mes con la misma regla.
+4. El primer rojo (o amarillo) y por qué, en una línea.
+5. **Una** decisión y qué medir en 7 días.
+6. Qué datos faltan para afinar (si faltan) y cuáles se asumieron del ejemplo.
+7. El perfil en JSON, la primera vez o cuando algo cambió.
+8. La línea de autor.
 
 ## Reglas duras
 

@@ -236,7 +236,21 @@ def verificar_simulador(path, v, wb):
         antes, despues = v.get(("SIMULADOR", f"E{fila_profit}")), v2.get(("SIMULADOR", f"E{fila_profit}"))
         cambia = abs(float(antes) - float(despues)) > 1e-6
         if not cambia: fallas.append(f"el Simulador no reacciona al cambiar el primer supuesto (ganancia {antes} → {despues})")
-    print(f"  Simulador: {comparadas} filas comparadas con Modelo, {len(fallas)} diferencias; reacciona al cambiar el primer supuesto: {cambia}")
+    # un porcentaje imposible en el Simulador tiene que poner Chequeos en REVISAR
+    detecta = None; fila_pct = None
+    for r in range(5, ws.max_row + 1):
+        c = ws.cell(r, 3)
+        if isinstance(c.value, str) and c.value.startswith("='Supuestos'") and "%" in (c.number_format or ""):
+            fila_pct = r; break
+    if fila_pct:
+        import tempfile
+        wb3 = openpyxl.load_workbook(path); wb3["Simulador"].cell(fila_pct, 3).value = 1.5
+        tmp3 = os.path.join(tempfile.gettempdir(), "sim_invalido.xlsx"); wb3.save(tmp3); v3 = calcular(tmp3)
+        chq = wb3["Chequeos"]; fila_general = next((rr for rr in range(5, chq.max_row + 1) if chq.cell(rr, 2).value == "Estado general del modelo"), None)
+        estado = v3.get(("CHEQUEOS", f"C{fila_general}")) if fila_general else None
+        detecta = (str(estado) == "REVISAR")
+        if not detecta: fallas.append(f"Chequeos dice {estado} con un porcentaje de 150 % en el Simulador (fila {fila_pct})")
+    print(f"  Simulador: {comparadas} filas comparadas con Modelo, {len(fallas)} diferencias; reacciona al cambiar el primer supuesto: {cambia}; Chequeos detecta un valor inválido: {detecta}")
     return fallas
 
 

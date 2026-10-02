@@ -28,7 +28,8 @@ Un libro más por embudo para el registro diario de todo el embudo: `Diario` (un
 
 ## Cómo usar la skill
 
-- **En claude.ai**: Configuración → Capacidades → Skills → subir `skill/modelos-financieros-embudos-skill.zip`. Después preguntale a Claude, por ejemplo: "¿hasta cuánto puedo pagar por lead en mi webinar?" y seguí sus preguntas.
+- **Plug and play**: completá `skill/modelos-financieros-embudos/perfil/mi_embudo.json` con tus números (guía en `perfil/PERFIL.md`) antes de subir la skill, o pegalo en el chat. Con el perfil, la skill no pregunta: te devuelve tus umbrales, tu radiografía contra tus promedios, tu proyección a 12 meses con caja necesaria y una decisión. Sin perfil, te hace dos mensajes de preguntas y te arma el perfil al final.
+- **En claude.ai**: Configuración → Capacidades → Skills → subir `skill/modelos-financieros-embudos-skill.zip`. Después preguntale a Claude, por ejemplo: "¿cómo está mi embudo?" o "¿hasta cuánto puedo pagar por lead en mi webinar?".
 - **En Claude Code**: copiá la carpeta `skill/modelos-financieros-embudos` a `~/.claude/skills/`.
 - **Sin Claude**, la calculadora sola: `python3 skill/modelos-financieros-embudos/scripts/calculadora.py --embudo webinar_gratuito --set cpm=4.5 ctr=0.022 conv_landing=0.23 --testeo anuncios_nuevos=12 pct_testeo=0.10 frecuencia=2.1 --html grafico.html` (no necesita librerías; `--supuestos` lista los parámetros; `--testeo` es opcional y alimenta la fila de testeo de la radiografía).
 
