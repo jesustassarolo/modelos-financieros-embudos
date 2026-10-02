@@ -32,7 +32,7 @@ Pedí todo en **un solo bloque**, con los valores del ejemplo como default y dic
 4. **El testeo:** anuncios nuevos publicados en los últimos 7 días, % del presupuesto que va a testeo, días que tiene el anuncio principal, frecuencia. Con esto sale si el embudo está alimentado.
 5. **Los costos:** pasarela, comisión de ventas, reembolsos, costo por unidad en WhatsApp o IA, fijos, cobranza por mes (si hay cuotas), ROAS objetivo (default 2; 2,5 a 3 en llamada), margen de seguridad (default 30 %).
 
-Aceptá datos parciales. Lo que falte se completa con el escenario conservador de `reference/benchmarks.md` y se marca como "supuesto de mercado", nunca como dato del usuario. Si el usuario describe algo híbrido (webinar gratuito que vende un taller barato y después un programa), usá `webinar_gratuito` con el taller como oferta y el programa como "programa superior". En llamada, un período con 1 o 2 ventas no es un dato: pedí 3 a 4 eventos o la mediana.
+Si el usuario lleva el Excel de métricas diarias de este sistema, su hoja `Semanal` ya tiene todo: pedile las columnas de sus últimas 4 semanas (inversión, visitas, unidades, etapas, ventas, facturado, cash) y usá la mediana como histórico. Aceptá datos parciales. Lo que falte se completa con el escenario conservador de `reference/benchmarks.md` y se marca como "supuesto de mercado", nunca como dato del usuario. Si el usuario describe algo híbrido (webinar gratuito que vende un taller barato y después un programa), usá `webinar_gratuito` con el taller como oferta y el programa como "programa superior". En llamada, un período con 1 o 2 ventas no es un dato: pedí 3 a 4 eventos o la mediana.
 
 ## Modos
 

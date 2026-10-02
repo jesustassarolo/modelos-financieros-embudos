@@ -8,7 +8,7 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 
 | Carpeta | Qué es |
 |---|---|
-| `excel/` | Los cuatro modelos, uno por embudo, con un negocio de ejemplo cargado: **01** low-ticket con VSL (producto principal, bumps 1 y 2, OTO 1 a 4, ascensión) · **02** webinar gratuito · **03** embudo de llamada (high ticket) · **04** webinar pago. Funcionan en Excel, Google Sheets y Numbers, sin macros. |
+| `excel/` (y `excel/metricas-diarias/`) | Los cuatro modelos, uno por embudo, con un negocio de ejemplo cargado: **01** low-ticket con VSL (producto principal, bumps 1 y 2, OTO 1 a 4, ascensión) · **02** webinar gratuito · **03** embudo de llamada (high ticket) · **04** webinar pago. Funcionan en Excel, Google Sheets y Numbers, sin macros. |
 | `skill/` | La skill `modelos-financieros-embudos` para Claude: te pide tus datos en orden de importancia y te devuelve la radiografía de tu embudo (lo que más importa, en orden y con semáforo: ganancia por visita, costo por lead contra el techo, conversión de la landing, testeo, ROAS, cadena y caja), una sola decisión y qué medir en 7 días; además calcula cuánto vale tu lead, hasta cuánto pagarlo, cuánto invertir, arma tu plan de testeo y dibuja el gráfico. Carpeta lista y `.zip` para subir. |
 | `paper/` | *Modelos financieros de embudos: cuánto invertir, cuánto pagar y cuándo frenar*. Los conceptos detrás de cada consejo, con figuras y las tablas de ejemplo de los cuatro embudos. PDF y fuente en markdown. |
 | `generador/` | El código que genera y verifica los Excel (Python, `openpyxl`). Para quien quiera ver cómo están hechas las fórmulas o regenerarlos. |
@@ -20,6 +20,10 @@ Creado por **Jesús Tassarolo** (TooAudience) · youtube.com/@JesusTassaroloSinF
 3. **Resumen**: ganancia, ROAS sobre cash neto, techo y objetivo de tu unidad, semáforo, y las dos caras de cada número (costo y ganancia por visita, por lead, por cliente; order value bruto y neto).
 4. **Embudo**: todos los pasos en orden con cantidad, % que pasa, % acumulado, lo que pagás hoy por cada uno (costo), lo que te queda por cada uno (ganancia) y lo máximo que podrías pagar (techo), con la fila de comprobación costo + ganancia + fijos repartidos = techo.
 5. **Escenarios**, **Sensibilidad**, **Proyección 12 meses** y **Seguimiento** (una columna por semana con tus datos reales y semáforo).
+
+## Métricas diarias (`excel/metricas-diarias/`)
+
+Un libro más por embudo para el registro diario de todo el embudo: `Diario` (una fila por día; amarillo = lo que cargás, azul = lo que calcula), `Semanal` (comparativo semana a semana con promedio, mediana, mejor y peor, y el bloque "contra tu promedio": cada semana contra la mediana de tus 4 semanas anteriores con una tolerancia del 25 %), `Resumen` (la semana elegida contra la anterior, tu mediana y tu meta) e `Inicio` (instructivo). No usan umbrales de mercado: el umbral es tu promedio. El CPL se lee además como % del CPM, porque el umbral de costo depende del nicho. La fila semanal se copia a la hoja Seguimiento del modelo financiero del mismo embudo. Se regeneran con `python3 generador/metricas_diarias/md_build.py` y se verifican con `md_verificar.py`.
 
 ## Cómo usar la skill
 
